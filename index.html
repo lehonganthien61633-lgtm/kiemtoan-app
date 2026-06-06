@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AM4 Fleet Manager</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap');
+
+        /* Tùy chỉnh Font và Giao diện tổng thể */
+        body {
+            font-family: "Times New Roman", Times, serif;
+            font-size: 16px;
+            margin: 0;
+            background-color: #f0f4f8;
+            color: #1e293b;
+        }
+        
+        /* Navbar & Menu */
+        .navbar {
+            background-color: #0f172a;
+            color: white;
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 15;
+        }
+        .menu-btn {
+            font-size: 26px;
+            cursor: pointer;
+            background: none;
+            border: none;
+            color: white;
+            margin-right: 20px;
+            transition: color 0.3s;
+        }
+        .menu-btn:hover { color: #38bdf8; }
+        .dropdown { position: relative; display: inline-block; }
+        .dropdown-content {
+            display: none; position: absolute; background-color: #fff; min-width: 220px;
+            box-shadow: 0px 10px 15px -3px rgba(0,0,0,0.1); z-index: 10; top: 45px; left: 0;
+            border: 1px solid #cbd5e1; border-radius: 4px; overflow: hidden;
+        }
+        .dropdown-content a {
+            color: #0f172a; padding: 12px 16px; text-decoration: none; display: block; cursor: pointer;
+            border-bottom: 1px solid #f1f5f9; font-family: "Times New Roman", Times, serif; font-size: 16px;
+        }
+        .dropdown-content a:hover { background-color: #f8fafc; color: #0284c7; }
+        .show { display: block; }
+
+        /* Container & Modules */
+        .container {
+            max-width: 1000px; margin: 30px auto; background: #fff; padding: 30px;
+            border: 1px solid #cbd5e1; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border-radius: 8px; min-height: 500px;
+        }
+        .module { display: none; }
+        .module.active { display: block; animation: fadeIn 0.4s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        h2.module-title {
+            text-align: center; text-transform: uppercase; font-weight: bold; color: #0f172a;
+            border-bottom: 2px solid #38bdf8; padding-bottom: 10px; margin-bottom: 25px; font-size: 22px;
+        }
+
+        /* Form Inputs */
+        .form-group {
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; max-width: 600px; margin-left: auto; margin-right: auto;
+        }
+        .form-group label { font-weight: bold; flex: 1; color: #334155; }
+        .form-group input, .form-group select {
+            padding: 10px; width: 250px; border: 1px solid #94a3b8; border-radius: 4px; font-family: "Times New Roman", Times, serif; font-size: 16px;
+        }
+        
+        /* Tables */
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        table, th, td { border: 1px solid #cbd5e1; }
+        th { background-color: #f1f5f9; font-weight: bold; color: #0f172a; padding: 12px; }
+        td { padding: 10px; text-align: center; font-size: 16px; color: #334155; }
+        
+        /* Buttons */
+        .btn-main { background: #0284c7; color: white; border: none; border-radius: 4px; padding: 10px 20px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        .btn-main:hover { background: #0369a1; }
+        .btn-add { background-color: #10b981; color: white; border: none; border-radius: 4px; padding: 8px 15px; cursor: pointer; font-weight: bold; }
+        .btn-add:hover { background-color: #059669; }
+        .btn-remove { background-color: #ef4444; color: white; border: none; padding: 6px 12px; cursor: pointer; border-radius: 4px; }
+        .btn-remove:hover { background-color: #dc2626; }
+
+        /* Auth System (Kept from original design) */
+        .auth-wrapper {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: url('https://images.unsplash.com/photo-1436491865332-7a61a109cc05?q=80&w=2000&auto=format&fit=crop') center/cover;
+            display: flex; justify-content: center; align-items: center; z-index: 100000; font-family: 'Roboto', sans-serif;
+        }
+        .auth-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(2, 132, 199, 0.8) 100%); backdrop-filter: blur(8px); }
+        .auth-box {
+            background: rgba(255, 255, 255, 0.95); padding: 40px; border-radius: 16px; width: 90%; max-width: 400px;
+            position: relative; z-index: 2; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+        .auth-title { text-align: center; font-size: 26px; font-weight: 900; margin-bottom: 5px; color: #0f172a; }
+        .auth-subtitle { text-align: center; font-size: 13px; color: #64748b; margin-bottom: 25px; border-bottom: 1px solid #e2e8f0; padding-bottom: 15px;}
+        .auth-box .form-group { display: block; max-width: 100%; }
+        .auth-box label { font-size: 12px; color: #475569; display: block; margin-bottom: 5px; text-transform: uppercase; font-family: 'Roboto', sans-serif;}
+        .auth-box input { width: 100%; box-sizing: border-box; padding: 12px; border-radius: 8px; border: 2px solid #e2e8f0; font-family: 'Roboto', sans-serif; margin-bottom: 15px;}
+        .auth-box .btn-main { width: 100%; padding: 14px; border-radius: 8px; font-size: 16px; margin-top: 10px; font-family: 'Roboto', sans-serif;}
+        .auth-switch { text-align: center; margin-top: 20px; font-size: 14px; cursor: pointer; color: #64748b; font-family: 'Roboto', sans-serif;}
+        
+        #save-status { font-size: 14px; color: #38bdf8; margin-left: 15px; font-weight: normal; }
+    </style>
+</head>
+<body>
+
+<div id="auth-screen" class="auth-wrapper">
+    <div class="auth-overlay"></div>
+    <div class="auth-box" id="login-box">
+        <div class="auth-title">AIRLINE MANAGER 4</div>
+        <div class="auth-subtitle">FLEET & ROUTE CONTROL CENTER</div>
+        
+        <div class="form-group">
+            <label>ID TÀI KHOẢN / SĐT</label>
+            <input type="text" id="login-phone" placeholder="Nhập mã định danh...">
+        </div>
+        <div class="form-group">
+            <label>MẬT KHẨU BẢO MẬT</label>
+            <input type="password" id="login-pass" placeholder="Nhập mật khẩu..." onkeydown="if(event.key === 'Enter') handleLogin()">
+        </div>
+        <button class="btn-main" onclick="handleLogin()">TRUY CẬP HỆ THỐNG</button>
+        <div class="auth-switch" onclick="switchAuth('register')">Mở hãng hàng không mới? Đăng ký</div>
+    </div>
+
+    <div class="auth-box" id="register-box" style="display:none;">
+        <div class="auth-title">THÀNH LẬP HÃNG</div>
+        <div class="auth-subtitle">ĐĂNG KÝ MÁY CHỦ QUẢN TRỊ</div>
+        <div class="form-group"><label>TÊN CEO</label><input type="text" id="reg-name" placeholder="Tên giám đốc điều hành" oninput="this.value = this.value.toUpperCase()"></div>
+        <div class="form-group"><label>ID TÀI KHOẢN / SĐT</label><input type="text" id="reg-phone" placeholder="Dùng để đăng nhập"></div>
+        <div class="form-group"><label>MẬT KHẨU</label><input type="password" id="reg-pass" placeholder="Tạo mật khẩu"></div>
+        <button class="btn-main" onclick="handleRegister()">THÀNH LẬP</button>
+        <div class="auth-switch" onclick="switchAuth('login')">← Đã có hãng? Đăng nhập</div>
+    </div>
+</div>
+
+<div id="main-app" style="display: none; width: 100%;">
+    <div class="navbar">
+        <div style="display: flex; align-items: center;">
+            <div class="dropdown">
+                <button class="menu-btn" onclick="toggleMenu()">☰</button>
+                <div id="myDropdown" class="dropdown-content">
+                    <a onclick="switchModule('module-dashboard')">📊 Bảng Tổng Quan</a>
+                    <a onclick="switchModule('module-fleet')">✈️ Quản Lý Đội Bay</a>
+                    <a onclick="switchModule('module-maintenance')">🔧 Lịch Bảo Trì (A/C Checks)</a>
+                    <a onclick="handleLogout()" style="color:#ef4444; border-top: 1px solid #e2e8f0; font-weight: bold;">🚪 Đăng Xuất</a>
+                </div>
+            </div>
+            <h3 style="margin: 0; font-weight: bold; font-family: 'Roboto', sans-serif; letter-spacing: 1px;">AM4 OPERATIONS <span id="save-status">Đang tải dữ liệu...</span></h3>
+        </div>
+        <div id="user-display-name" style="margin-left: auto; font-weight: bold; font-size: 14px; text-transform: uppercase; font-family: 'Roboto', sans-serif;"></div>
+    </div>
+
+    <div class="container">
+        <div id="module-dashboard" class="module active">
+            <h2 class="module-title">Thông Tin Tài Chính & Hoạt Động</h2>
+            <div class="form-group">
+                <label>Ngân sách hiện tại (Tài khoản chính):</label>
+                <input type="text" id="db-balance" placeholder="VD: 15,000,000 $" oninput="formatCurrency(this); triggerSave()">
+            </div>
+            <div class="form-group">
+                <label>Cổ phiếu (Stock Value):</label>
+                <input type="text" id="db-stock" placeholder="VD: 120.50" oninput="triggerSave()">
+            </div>
+            <div class="form-group">
+                <label>Nhiên liệu (Lbs):</label>
+                <input type="text" id="db-fuel" placeholder="VD: 5,000,000" oninput="formatCurrency(this); triggerSave()">
+            </div>
+            <div class="form-group">
+                <label>Hạn mức CO2 (Quotas):</label>
+                <input type="text" id="db-co2" placeholder="VD: 1,500,000" oninput="formatCurrency(this); triggerSave()">
+            </div>
+            
+            <div style="margin-top: 40px; border-top: 2px dashed #cbd5e1; padding-top: 20px; text-align: center;">
+                <h3>TÓM TẮT ĐỘI BAY</h3>
+                <h1 id="total-fleet-count" style="font-size: 48px; color: #0284c7; margin: 10px 0;">0</h1>
+                <p style="color: #64748b; font-weight: bold;">TỔNG SỐ TÀU BAY ĐANG KHAI THÁC</p>
+            </div>
+        </div>
+
+        <div id="module-fleet" class="module">
+            <h2 class="module-title">Danh Sách Đội Bay</h2>
+            <div style="text-align: right; margin-bottom: 15px;">
+                <button class="btn-add" onclick="addFleetRow()">+ Nhập Máy Bay Mới</button>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 5%;">STT</th>
+                        <th style="width: 15%;">Số Hiệu (Reg)</th>
+                        <th style="width: 20%;">Dòng Máy Bay</th>
+                        <th style="width: 15%;">Tầm Bay (km)</th>
+                        <th style="width: 20%;">Cấu Hình (Y/J/F)</th>
+                        <th style="width: 15%;">Tình Trạng (%)</th>
+                        <th style="width: 10%;">Thao Tác</th>
+                    </tr>
+                </thead>
+                <tbody id="fleet-tbody">
+                    </tbody>
+            </table>
+        </div>
+
+        <div id="module-maintenance" class="module">
+            <h2 class="module-title">Danh Sách Cần Bảo Trì (A-Check)</h2>
+            <p style="text-align: center; color: #64748b; font-style: italic;">Các máy bay có tình trạng dưới 50% sẽ tự động được liệt kê tại đây.</p>
+            <table style="margin-top: 20px;">
+                <thead>
+                    <tr>
+                        <th>Số Hiệu</th>
+                        <th>Dòng Máy Bay</th>
+                        <th>Độ Mài Mòn</th>
+                        <th>Cần A-Check</th>
+                    </tr>
+                </thead>
+                <tbody id="maintenance-tbody">
+                    </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    /* =========================================================================
+       FIREBASE CONFIGURATION (YÊU CẦU CỦA NGƯỜI DÙNG)
+       ========================================================================= */
+    const DB_BASE_URL = "https://airline-manager-4-fe36d-default-rtdb.asia-southeast1.firebasedatabase.app/";
+    const AUTH_URL = DB_BASE_URL + "accounts.json";
+    
+    let activePhone = null;
+    let systemUsers = {};
+    let companyData = {
+        balance: "", stock: "", fuel: "", co2: "",
+        fleet: []
+    };
+    let saveTimer = null;
+
+    /* =========================================================================
+       HỆ THỐNG XÁC THỰC (AUTH)
+       ========================================================================= */
+    async function loadAuth() {
+        try {
+            let res = await fetch(AUTH_URL);
+            if (res.ok) {
+                let data = await res.json();
+                if (data) systemUsers = data;
+            }
+        } catch(e) { console.error("Auth Load Error", e); }
+    }
+
+    async function saveAuth() {
+        await fetch(AUTH_URL, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(systemUsers) });
+    }
+
+    function switchAuth(type) {
+        document.getElementById('login-box').style.display = type === 'login' ? 'block' : 'none';
+        document.getElementById('register-box').style.display = type === 'register' ? 'block' : 'none';
+    }
+
+    async function handleRegister() {
+        let name = document.getElementById('reg-name').value.trim();
+        let phone = document.getElementById('reg-phone').value.trim();
+        let pass = document.getElementById('reg-pass').value;
+
+        if (!name || !phone || !pass) return alert("Vui lòng nhập đủ thông tin!");
+        if (systemUsers[phone]) return alert("Tài khoản đã tồn tại!");
+
+        systemUsers[phone] = { name: name, password: pass };
+        await saveAuth();
+        alert("Thành lập hãng thành công! Vui lòng đăng nhập.");
+        switchAuth('login');
+        document.getElementById('login-phone').value = phone;
+    }
+
+    async function handleLogin() {
+        let phone = document.getElementById('login-phone').value.trim();
+        let pass = document.getElementById('login-pass').value;
+
+        if (!phone || !pass) return alert("Vui lòng nhập ID và Mật khẩu!");
+        if (!systemUsers[phone] || systemUsers[phone].password !== pass) return alert("Sai tài khoản hoặc mật khẩu!");
+
+        activePhone = phone;
+        document.getElementById('auth-screen').style.display = 'none';
+        document.getElementById('main-app').style.display = 'block';
+        document.getElementById('user-display-name').innerText = `CEO: ${systemUsers[phone].name}`;
+        
+        await loadCompanyData();
+    }
+
+    function handleLogout() {
+        if(confirm("Xác nhận đăng xuất khỏi hệ thống?")) {
+            activePhone = null;
+            companyData = { balance: "", stock: "", fuel: "", co2: "", fleet: [] };
+            document.getElementById('auth-screen').style.display = 'flex';
+            document.getElementById('main-app').style.display = 'none';
+            document.getElementById('login-pass').value = '';
+        }
+    }
+
+    /* =========================================================================
+       GIAO DIỆN & NAVIGATION
+       ========================================================================= */
+    function toggleMenu() { document.getElementById("myDropdown").classList.toggle("show"); }
+    window.onclick = function(e) {
+        if (!e.target.matches('.menu-btn')) {
+            let dd = document.getElementsByClassName("dropdown-content");
+            for (let i=0; i<dd.length; i++) if (dd[i].classList.contains('show')) dd[i].classList.remove('show');
+        }
+    }
+
+    function switchModule(modId) {
+        let mods = document.getElementsByClassName("module");
+        for (let i=0; i<mods.length; i++) mods[i].classList.remove("active");
+        document.getElementById(modId).classList.add("active");
+        
+        if(modId === 'module-maintenance') renderMaintenance();
+    }
+
+    function formatCurrency(input) {
+        let val = input.value.replace(/\D/g, '');
+        input.value = val !== '' ? parseInt(val, 10).toLocaleString('en-US') : '';
+    }
+
+    /* =========================================================================
+       DATA SYNC & QUẢN LÝ ĐỘI BAY (AM4 LOGIC)
+       ========================================================================= */
+    function setSyncStatus(msg, color) {
+        let st = document.getElementById('save-status');
+        st.innerText = msg; st.style.color = color;
+    }
+
+    function getCompanyDataURL() { return DB_BASE_URL + "companyData/" + activePhone + ".json"; }
+
+    async function loadCompanyData() {
+        setSyncStatus("(Đang tải...)", "#f59e0b");
+        try {
+            let res = await fetch(getCompanyDataURL());
+            if (res.ok) {
+                let data = await res.json();
+                if (data) companyData = Object.assign(companyData, data);
+            }
+            if(!companyData.fleet) companyData.fleet = [];
+            
+            // Map data to Dashboard
+            document.getElementById('db-balance').value = companyData.balance || "";
+            document.getElementById('db-stock').value = companyData.stock || "";
+            document.getElementById('db-fuel').value = companyData.fuel || "";
+            document.getElementById('db-co2').value = companyData.co2 || "";
+            
+            renderFleetTable();
+            setSyncStatus("(Đã đồng bộ)", "#10b981");
+        } catch(e) {
+            setSyncStatus("(Lỗi tải dữ liệu)", "#ef4444");
+        }
+    }
+
+    async function saveCompanyData() {
+        if(!activePhone) return;
+        setSyncStatus("(Đang lưu...)", "#f59e0b");
+        
+        // Cập nhật lại dữ liệu Dashboard
+        companyData.balance = document.getElementById('db-balance').value;
+        companyData.stock = document.getElementById('db-stock').value;
+        companyData.fuel = document.getElementById('db-fuel').value;
+        companyData.co2 = document.getElementById('db-co2').value;
+        
+        // Cập nhật mảng Đội bay từ bảng HTML
+        let newFleet = [];
+        document.querySelectorAll('#fleet-tbody tr').forEach(tr => {
+            let reg = tr.querySelector('.f-reg').value.trim();
+            let model = tr.querySelector('.f-model').value.trim();
+            if (reg || model) {
+                newFleet.push({
+                    id: tr.dataset.id,
+                    reg: reg,
+                    model: model,
+                    range: tr.querySelector('.f-range').value.trim(),
+                    config: tr.querySelector('.f-config').value.trim(),
+                    cond: tr.querySelector('.f-cond').value.trim()
+                });
+            }
+        });
+        companyData.fleet = newFleet;
+
+        try {
+            await fetch(getCompanyDataURL(), {
+                method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(companyData)
+            });
+            setSyncStatus("(Đã lưu)", "#10b981");
+            updateDashboardCount();
+        } catch(e) { setSyncStatus("(Lỗi kết nối)", "#ef4444"); }
+    }
+
+    function triggerSave() {
+        clearTimeout(saveTimer);
+        setSyncStatus("(Chờ lưu...)", "#f59e0b");
+        saveTimer = setTimeout(saveCompanyData, 1500);
+    }
+
+    // CRUD FLEET
+    function renderFleetTable() {
+        let tbody = document.getElementById('fleet-tbody');
+        tbody.innerHTML = '';
+        if(companyData.fleet.length === 0) { addFleetRow(); } 
+        else { companyData.fleet.forEach(ac => addFleetRow(ac)); }
+        updateDashboardCount();
+    }
+
+    function addFleetRow(ac = {id: 'AC_'+Date.now(), reg: '', model: '', range: '', config: '', cond: '100'}) {
+        let tbody = document.getElementById('fleet-tbody');
+        let tr = document.createElement('tr');
+        tr.dataset.id = ac.id;
+        
+        // Styling specific conditions
+        let condColor = parseInt(ac.cond) < 50 ? 'color: #ef4444; font-weight: bold;' : '';
+
+        tr.innerHTML = `
+            <td class="f-stt"></td>
+            <td><input type="text" class="f-reg" value="${ac.reg}" placeholder="VN-A..." style="width: 100%; box-sizing: border-box;" oninput="triggerSave()"></td>
+            <td><input type="text" class="f-model" value="${ac.model}" placeholder="VD: A380-800" style="width: 100%; box-sizing: border-box;" oninput="triggerSave()"></td>
+            <td><input type="text" class="f-range" value="${ac.range}" placeholder="km" style="width: 100%; box-sizing: border-box; text-align: center;" oninput="formatCurrency(this); triggerSave()"></td>
+            <td><input type="text" class="f-config" value="${ac.config}" placeholder="Y / J / F" style="width: 100%; box-sizing: border-box; text-align: center;" oninput="triggerSave()"></td>
+            <td><input type="number" class="f-cond" value="${ac.cond}" min="0" max="100" style="width: 100%; box-sizing: border-box; text-align: center; ${condColor}" oninput="triggerSave()"></td>
+            <td><button class="btn-remove" onclick="removeFleetRow(this)">Bán</button></td>
+        `;
+        tbody.appendChild(tr);
+        updateFleetSTT();
+    }
+
+    function removeFleetRow(btn) {
+        if(confirm("Chắc chắn muốn bán/xóa tàu bay này?")) {
+            btn.closest('tr').remove();
+            updateFleetSTT();
+            triggerSave();
+        }
+    }
+
+    function updateFleetSTT() {
+        document.querySelectorAll('#fleet-tbody tr').forEach((tr, i) => tr.querySelector('.f-stt').innerText = i + 1);
+    }
+
+    function updateDashboardCount() {
+        let count = document.querySelectorAll('#fleet-tbody tr').length;
+        // Check if row is just empty shell
+        let firstReg = document.querySelector('.f-reg')?.value.trim();
+        let firstModel = document.querySelector('.f-model')?.value.trim();
+        if(count === 1 && !firstReg && !firstModel) count = 0;
+        
+        document.getElementById('total-fleet-count').innerText = count;
+    }
+
+    function renderMaintenance() {
+        let tbody = document.getElementById('maintenance-tbody');
+        tbody.innerHTML = '';
+        let needsCheck = false;
+
+        document.querySelectorAll('#fleet-tbody tr').forEach(tr => {
+            let cond = parseInt(tr.querySelector('.f-cond').value) || 0;
+            let reg = tr.querySelector('.f-reg').value || "N/A";
+            let model = tr.querySelector('.f-model').value || "N/A";
+
+            if (cond < 50 && (reg !== "N/A" || model !== "N/A")) {
+                needsCheck = true;
+                tbody.innerHTML += `
+                    <tr>
+                        <td style="font-weight: bold;">${reg}</td>
+                        <td>${model}</td>
+                        <td style="color: #ef4444; font-weight: bold;">${cond}%</td>
+                        <td><button class="btn-main" style="background:#f59e0b;" onclick="alert('Đã gửi yêu cầu A-Check cho đội bảo trì!');">Tiến hành Check</button></td>
+                    </tr>
+                `;
+            }
+        });
+
+        if(!needsCheck) {
+            tbody.innerHTML = `<tr><td colspan="4" style="color: #10b981; font-weight: bold; padding: 20px;">Tất cả tàu bay đều hoạt động tốt!</td></tr>`;
+        }
+    }
+
+    // Khởi động
+    loadAuth();
+</script>
+</body>
+</html>
