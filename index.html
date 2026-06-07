@@ -148,7 +148,8 @@
                 <button class="menu-btn" onclick="toggleMenu()">☰</button>
                 <div id="myDropdown" class="dropdown-content">
                     <a onclick="switchModule('module-dashboard')">📊 Bảng Tổng Quan</a>
-                    <a onclick="switchModule('module-fleet')">✈️ Quản Lý Đội Bay</a>
+                    <a onclick="switchModule('module-fleet')">⚙️ Thông Tin Cấu Hình Máy Bay</a>
+                    <a onclick="switchModule('module-routes')">✈️ Quản Lý Đội Bay</a>
                     <a onclick="switchModule('module-maintenance')">🔧 Lịch Bảo Trì (A/C Checks)</a>
                     <a onclick="switchModule('module-airports')">🛫 Quản Lý Sân Bay</a>
                     <a onclick="handleLogout()" style="color:#ef4444; border-top: 1px solid #e2e8f0; font-weight: bold;">🚪 Đăng Xuất</a>
@@ -207,8 +208,29 @@
                 </table>
             </div>
         </div>
+        <div id="module-routes" class="module">
+            <h2 class="module-title">Quản Lý Đội Bay (Tuyến & Chặng)</h2>
+            <div style="text-align: right; margin-bottom: 15px;">
+                <button class="btn-add" onclick="addRouteRow()">+ Thêm Chuyến Bay Mới</button>
+            </div>
+            <div style="overflow-x: auto;">
+                <table style="min-width: 800px;">
+                    <thead>
+                        <tr>
+                            <th style="width: 10%;">STT</th>
+                            <th style="width: 40%;">Mã Tuyến bay (XX-NNN)</th>
+                            <th style="width: 40%;">Mã chặng bay (XXXX-NNN)</th>
+                            <th style="width: 10%;">Thao Tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="routes-tbody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
         <div id="module-fleet" class="module">
-            <h2 class="module-title">Danh Sách Đội Bay</h2>
+            <h2 class="module-title">Thông Tin Cấu Hình Máy Bay</h2>
             <div style="text-align: right; margin-bottom: 15px;">
                 <button class="btn-add" onclick="addFleetRow()">+ Nhập Máy Bay Mới</button>
             </div>
@@ -248,25 +270,10 @@
     let systemUsers = {};
     let companyData = {
         balance: "", stock: "", fuel: "", co2: "",
-        fleet: [], airports: [] // Thêm mảng airports
+        fleet: [], airports: [], routes: [] // Thêm mảng routes
     };
     let saveTimer = null;
 
-    /* (Giữ nguyên các hàm auth như loadAuth, saveAuth, switchAuth, handleRegister, handleLogin) */
-
-    function handleLogout() {
-        if(confirm("Xác nhận đăng xuất khỏi hệ thống?")) {
-            activePhone = null;
-            companyData = { balance: "", stock: "", fuel: "", co2: "", fleet: [], airports: [] };
-            document.getElementById('auth-screen').style.display = 'flex';
-            document.getElementById('main-app').style.display = 'none';
-            document.getElementById('login-pass').value = '';
-        }
-    }
-
-    /* =========================================================================
-       HỆ THỐNG XÁC THỰC (AUTH)
-       ========================================================================= */
     async function loadAuth() {
         try {
             let res = await fetch(AUTH_URL);
@@ -319,13 +326,12 @@
     function handleLogout() {
         if(confirm("Xác nhận đăng xuất khỏi hệ thống?")) {
             activePhone = null;
-            companyData = { balance: "", stock: "", fuel: "", co2: "", fleet: [] };
+            companyData = { balance: "", stock: "", fuel: "", co2: "", fleet: [], airports: [], routes: [] };
             document.getElementById('auth-screen').style.display = 'flex';
             document.getElementById('main-app').style.display = 'none';
             document.getElementById('login-pass').value = '';
         }
     }
-
     /* =========================================================================
        GIAO DIỆN & NAVIGATION
        ========================================================================= */
@@ -369,16 +375,17 @@
                 if (data) companyData = Object.assign(companyData, data);
             }
             if(!companyData.fleet) companyData.fleet = [];
-            if(!companyData.airports) companyData.airports = []; // Khởi tạo nếu chưa có
+            if(!companyData.airports) companyData.airports = [];
+            if(!companyData.routes) companyData.routes = []; // Khởi tạo nếu chưa có
             
-            // Map data to Dashboard
             document.getElementById('db-balance').value = companyData.balance || "";
             document.getElementById('db-stock').value = companyData.stock || "";
             document.getElementById('db-fuel').value = companyData.fuel || "";
             document.getElementById('db-co2').value = companyData.co2 || "";
             
             renderFleetTable();
-            renderAirportsTable(); // Gọi hàm render bảng sân bay
+            renderAirportsTable();
+            renderRoutesTable(); // Render bảng Quản lý đội bay
             setSyncStatus("(Đã đồng bộ)", "#10b981");
         } catch(e) {
             setSyncStatus("(Lỗi tải dữ liệu)", "#ef4444");
@@ -389,52 +396,53 @@
         if(!activePhone) return;
         setSyncStatus("(Đang lưu...)", "#f59e0b");
         
-        // Cập nhật lại dữ liệu Dashboard
         companyData.balance = document.getElementById('db-balance').value;
         companyData.stock = document.getElementById('db-stock').value;
         companyData.fuel = document.getElementById('db-fuel').value;
         companyData.co2 = document.getElementById('db-co2').value;
         
-        // Cập nhật mảng Đội bay
+        // Save Cấu Hình Máy Bay
         let newFleet = [];
         document.querySelectorAll('#fleet-tbody tr').forEach(tr => {
             let maker = tr.querySelector('.f-maker').value.trim();
             let model = tr.querySelector('.f-model').value.trim();
             if (maker || model) {
                 newFleet.push({
-                    id: tr.dataset.id,
-                    maker: maker,
-                    model: model,
-                    range: tr.querySelector('.f-range').value.trim(),
-                    maxspeed: tr.querySelector('.f-maxspeed').value.trim(),
-                    pax: tr.querySelector('.f-pax').value.trim(),
-                    acheck: tr.querySelector('.f-acheck').value.trim(),
-                    fuelcons: tr.querySelector('.f-fuelcons').value.trim(),
-                    co2emis: tr.querySelector('.f-co2emis').value.trim(),
-                    price: tr.querySelector('.f-price').value.trim(),
-                    cond: tr.querySelector('.f-cond').value.trim(),
-                    speed: tr.querySelector('.f-speed').value.trim()
+                    id: tr.dataset.id, maker: maker, model: model,
+                    range: tr.querySelector('.f-range').value.trim(), maxspeed: tr.querySelector('.f-maxspeed').value.trim(),
+                    pax: tr.querySelector('.f-pax').value.trim(), acheck: tr.querySelector('.f-acheck').value.trim(),
+                    fuelcons: tr.querySelector('.f-fuelcons').value.trim(), co2emis: tr.querySelector('.f-co2emis').value.trim(),
+                    price: tr.querySelector('.f-price').value.trim(), cond: tr.querySelector('.f-cond').value.trim(), speed: tr.querySelector('.f-speed').value.trim()
                 });
             }
         });
         companyData.fleet = newFleet;
 
-        // Cập nhật mảng Sân bay
+        // Save Sân bay
         let newAirports = [];
         document.querySelectorAll('#airports-tbody tr').forEach(tr => {
             let name = tr.querySelector('.a-name').value.trim();
             let icao = tr.querySelector('.a-icao').value.trim();
             if (name || icao) {
                 newAirports.push({
-                    id: tr.dataset.id,
-                    country: tr.querySelector('.a-country').value.trim(),
-                    name: name,
-                    icao: icao,
-                    iata: tr.querySelector('.a-iata').value.trim()
+                    id: tr.dataset.id, country: tr.querySelector('.a-country').value.trim(), name: name, icao: icao, iata: tr.querySelector('.a-iata').value.trim()
                 });
             }
         });
         companyData.airports = newAirports;
+
+        // Save Quản lý Đội Bay (Tuyến)
+        let newRoutes = [];
+        document.querySelectorAll('#routes-tbody tr').forEach(tr => {
+            let route = tr.querySelector('.r-route').value.trim();
+            let segment = tr.querySelector('.r-segment').value.trim();
+            if (route || segment) {
+                newRoutes.push({
+                    id: tr.dataset.id, route: route, segment: segment
+                });
+            }
+        });
+        companyData.routes = newRoutes;
 
         try {
             await fetch(getCompanyDataURL(), {
@@ -569,6 +577,66 @@ function renderAirportsTable() {
 
     function updateAirportSTT() {
         document.querySelectorAll('#airports-tbody tr').forEach((tr, i) => tr.querySelector('.a-stt').innerText = i + 1);
+    }
+    function handleRouteCodeInput(inputEle, type) {
+        let prefixLen = type === 'route' ? 2 : 4;
+        let className = type === 'route' ? '.r-route' : '.r-segment';
+        let msg = type === 'route' ? 'Nhập 2 ký tự in hoa cho Mã Tuyến (VD: RO):' : 'Nhập 4 ký tự in hoa cho Mã Chặng (VD: ROVN):';
+        
+        let prefix = prompt(msg);
+        if(prefix) {
+            prefix = prefix.toUpperCase().replace(/[^A-Z]/g, '').substring(0, prefixLen);
+            if(prefix.length === prefixLen) {
+                let maxNum = 0;
+                // Tìm giá trị số lớn nhất hiện tại
+                document.querySelectorAll(className).forEach(inp => {
+                    if (inp !== inputEle && inp.value.startsWith(prefix + '-')) {
+                        let numPart = parseInt(inp.value.split('-')[1]);
+                        if (!isNaN(numPart) && numPart > maxNum) maxNum = numPart;
+                    }
+                });
+                maxNum++; // Tăng thêm 1
+                inputEle.value = prefix + '-' + maxNum.toString().padStart(3, '0');
+                triggerSave();
+            } else {
+                alert(`Vui lòng nhập đúng ${prefixLen} ký tự chữ cái in hoa!`);
+            }
+        }
+    }
+
+    function renderRoutesTable() {
+        let tbody = document.getElementById('routes-tbody');
+        tbody.innerHTML = '';
+        if(companyData.routes.length === 0) { addRouteRow(); } 
+        else { companyData.routes.forEach(rt => addRouteRow(rt)); }
+    }
+
+    function addRouteRow(rt = {id: 'RT_'+Date.now(), route: '', segment: ''}) {
+        let tbody = document.getElementById('routes-tbody');
+        let tr = document.createElement('tr');
+        tr.dataset.id = rt.id || ('RT_'+Date.now());
+        
+        // Khi bấm vào ô input, nó sẽ kích hoạt bảng (prompt) để nhập mã
+        tr.innerHTML = `
+            <td class="r-stt" style="text-align: center; font-weight: bold;"></td>
+            <td><input type="text" class="r-route" value="${rt.route || ''}" readonly onclick="handleRouteCodeInput(this, 'route')" placeholder="Bấm vào đây để tạo Mã Tuyến..." style="width: 100%; box-sizing: border-box; text-align: center; cursor: pointer; background: #f8fafc; border: 2px dashed #94a3b8; font-weight: bold; color: #0284c7;"></td>
+            <td><input type="text" class="r-segment" value="${rt.segment || ''}" readonly onclick="handleRouteCodeInput(this, 'segment')" placeholder="Bấm vào đây để tạo Mã Chặng..." style="width: 100%; box-sizing: border-box; text-align: center; cursor: pointer; background: #f8fafc; border: 2px dashed #94a3b8; font-weight: bold; color: #10b981;"></td>
+            <td><button class="btn-remove" onclick="removeRouteRow(this)">Xóa</button></td>
+        `;
+        tbody.appendChild(tr);
+        updateRouteSTT();
+    }
+
+    function removeRouteRow(btn) {
+        if(confirm("Chắc chắn muốn xóa dữ liệu tuyến bay này?")) {
+            btn.closest('tr').remove();
+            updateRouteSTT();
+            triggerSave();
+        }
+    }
+
+    function updateRouteSTT() {
+        document.querySelectorAll('#routes-tbody tr').forEach((tr, i) => tr.querySelector('.r-stt').innerText = i + 1);
     }
     // Khởi động
     loadAuth();
