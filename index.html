@@ -217,13 +217,14 @@
                 <button class="btn-add" onclick="addHubRow()">+ Thêm HUB Mới</button>
             </div>
             <div style="overflow-x: auto;">
-                <table style="min-width: 600px;">
+                <table style="min-width: 800px;">
                     <thead>
                         <tr>
-                            <th style="width: 10%;">STT</th>
-                            <th style="width: 40%;">Tên HUB</th>
+                            <th style="width: 5%;">STT</th>
+                            <th style="width: 25%;">Tên HUB</th>
+                            <th style="width: 25%;">Quốc gia (Tên/Mã)</th>
                             <th style="width: 20%;">Mã ICAO/IATA</th>
-                            <th style="width: 15%;">Chọn Base</th>
+                            <th style="width: 10%;">Chọn Base</th>
                             <th style="width: 15%;">Thao Tác</th>
                         </tr>
                     </thead>
@@ -243,7 +244,7 @@
                         <tr>
                             <th style="width: 5%;">STT</th>
                             <th style="width: 40%;">Sân bay xuất phát (Từ HUB)</th>
-                            <th style="width: 40%;">Sân bay đến (Destination)</th>
+                            <th style="width: 40%;">Sân bay đến (Từ Global)</th>
                             <th style="width: 15%;">Thao Tác</th>
                         </tr>
                     </thead>
@@ -253,7 +254,7 @@
         </div>
 
         <div id="module-routes" class="module">
-            <h2 class="module-title">Quản Lý Đội Bay (Tuyến & Chặng & Tàu Bay)</h2>
+            <h2 class="module-title">Quản Lý Đội Bay (Phân Công Tàu Bay)</h2>
             <div style="text-align: right; margin-bottom: 15px;">
                 <button class="btn-add" onclick="addRouteRow()">+ Phân Công Đội Bay</button>
             </div>
@@ -262,22 +263,15 @@
                     <thead>
                         <tr>
                             <th style="width: 5%;">STT</th>
-                            <th style="width: 25%;">Mã Tuyến bay (XX-NNN)</th>
-                            <th style="width: 25%;">Mã chặng bay (XXXX-NNN)</th>
-                            <th style="width: 35%;">Chọn Dòng Máy Bay</th>
+                            <th style="width: 15%;">Chặng Bay (Tự Động)</th>
+                            <th style="width: 20%;">Mã Tuyến bay</th>
+                            <th style="width: 20%;">Mã chặng bay</th>
+                            <th style="width: 30%;">Chọn Dòng Máy Bay</th>
                             <th style="width: 10%;">Thao Tác</th>
                         </tr>
                     </thead>
                     <tbody id="routes-tbody"></tbody>
                 </table>
-            </div>
-        </div>
-
-        <div id="ac-modal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(15, 23, 42, 0.7); z-index:99999; align-items:center; justify-content:center;">
-            <div style="background:#fff; padding:30px; border-radius:12px; min-width:350px; max-width:500px; box-shadow: 0 25px 50px rgba(0,0,0,0.3);">
-                <h2 style="margin-top:0; color:#0284c7; border-bottom:2px solid #e2e8f0; padding-bottom:10px;">📄 CHI TIẾT TÀU BAY</h2>
-                <div id="modal-content" style="line-height:1.8; font-size:16px; margin-bottom:20px; color:#334155;"></div>
-                <div style="text-align:right;"><button class="btn-remove" onclick="document.getElementById('ac-modal').style.display='none'">Đóng Lại</button></div>
             </div>
         </div>
 
@@ -287,30 +281,34 @@
                 <button class="btn-add" onclick="addFleetRow()">+ Nhập Máy Bay Mới</button>
             </div>
             <div style="overflow-x: auto;">
-                <table style="min-width: 1500px;">
+                <table style="min-width: 1600px;">
                     <thead>
                         <tr>
                             <th style="width: 4%;">STT</th>
-                            <th style="width: 10%;">Hãng máy bay</th>
+                            <th style="width: 10%; cursor: pointer; color: #0284c7; text-decoration: underline;" onclick="openMakersManager()" title="Bấm để quản lý Hãng">Hãng máy bay ⚙️</th>
                             <th style="width: 10%;">Dòng máy bay</th>
                             <th style="width: 8%;">Khoảng cách tối đa (km)</th>
                             <th style="width: 8%;">Vận tốc tối đa (km/h)</th>
-                            <th style="width: 7%;">Số hành khách</th>
+                            <th style="width: 7%;">Số HK (Hạng Y)</th>
+                            <th style="width: 10%;">Phi hành đoàn</th>
                             <th style="width: 9%;">Giá tiền A-check ($)</th>
-                            <th style="width: 9%;">Tiêu hao NL (Lbs/km)</th>
-                            <th style="width: 9%;">Phát thải CO2 (kg/km)</th>
-                            <th style="width: 9%;">Giá mua ($)</th>
-                            <th style="width: 6%;">Maint check (%)</th>
-                            <th style="width: 8%;">Vận tốc bay (km/h)</th>
+                            <th style="width: 8%;">Maint check (Giờ)</th>
+                            <th style="width: 8%;">Tiêu hao NL (Lbs/km)</th>
+                            <th style="width: 8%;">Phát thải CO2 (kg/km)</th>
+                            <th style="width: 8%;">Giá mua ($)</th>
+                            <th style="width: 7%;">Vận tốc bay (km/h)</th>
                             <th style="width: 5%;">Thao Tác</th>
                         </tr>
                     </thead>
-                    <tbody id="fleet-tbody">
-                    </tbody>
+                    <tbody id="fleet-tbody"></tbody>
                 </table>
             </div>
         </div>
 
+        <div id="common-modal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(15, 23, 42, 0.7); z-index:99999; align-items:center; justify-content:center;">
+            <div id="common-modal-content" style="background:#fff; padding:30px; border-radius:12px; min-width:350px; max-width:600px; max-height:80vh; overflow-y:auto; box-shadow: 0 25px 50px rgba(0,0,0,0.3);">
+                </div>
+        </div>
 <script>
     /* =========================================================================
        FIREBASE CONFIGURATION (YÊU CẦU CỦA NGƯỜI DÙNG)
@@ -320,12 +318,14 @@
     
     let activePhone = null;
     let systemUsers = {};
-    let companyData = {
+   let companyData = {
         balance: "", stock: "", fuel: "", co2: "",
-        fleet: [], hubs: [], flightRoutes: [], routes: []
+        fleet: [], hubs: [], flightRoutes: [], routes: [], makers: []
     };
     let globalAirports = []; // Lưu trữ sân bay toàn cầu
     let saveTimer = null;
+    let currentActiveInput = null; // Biến tạm phục vụ Modal
+    let currentActiveRowId = null;
 
     async function loadAuth() {
         try {
@@ -414,18 +414,15 @@
     async function loadCompanyData() {
         setSyncStatus("(Đang tải...)", "#f59e0b");
         try {
-            // Lấy dữ liệu Sân bay Global trước
             let resGlobal = await fetch(DB_BASE_URL + "globalAirports.json");
             if (resGlobal.ok) { let dataG = await resGlobal.json(); if(dataG) globalAirports = dataG; }
 
-            // Lấy dữ liệu Company
             let res = await fetch(getCompanyDataURL());
             if (res.ok) { let data = await res.json(); if (data) companyData = Object.assign(companyData, data); }
             
-            if(!companyData.fleet) companyData.fleet = [];
-            if(!companyData.hubs) companyData.hubs = [];
-            if(!companyData.flightRoutes) companyData.flightRoutes = [];
-            if(!companyData.routes) companyData.routes = [];
+            if(!companyData.fleet) companyData.fleet = []; if(!companyData.hubs) companyData.hubs = [];
+            if(!companyData.flightRoutes) companyData.flightRoutes = []; if(!companyData.routes) companyData.routes = [];
+            if(!companyData.makers) companyData.makers = [];
             
             document.getElementById('db-balance').value = companyData.balance || "";
             document.getElementById('db-stock').value = companyData.stock || "";
@@ -441,27 +438,26 @@
         if(!activePhone) return;
         setSyncStatus("(Đang lưu...)", "#f59e0b");
         
-        companyData.balance = document.getElementById('db-balance').value;
-        companyData.stock = document.getElementById('db-stock').value;
-        companyData.fuel = document.getElementById('db-fuel').value;
-        companyData.co2 = document.getElementById('db-co2').value;
+        companyData.balance = document.getElementById('db-balance').value; companyData.stock = document.getElementById('db-stock').value;
+        companyData.fuel = document.getElementById('db-fuel').value; companyData.co2 = document.getElementById('db-co2').value;
         
-        // Save Cấu Hình Máy Bay
+        // Save Cấu Hình Máy Bay (Thêm logic lấy data Phi hành đoàn)
         let newFleet = [];
         document.querySelectorAll('#fleet-tbody tr').forEach(tr => {
-            let maker = tr.querySelector('.f-maker').value.trim(); let model = tr.querySelector('.f-model').value.trim();
+            let maker = tr.querySelector('.f-maker').value; let model = tr.querySelector('.f-model').value.trim();
             if (maker || model) {
                 newFleet.push({
                     id: tr.dataset.id, maker: maker, model: model, range: tr.querySelector('.f-range').value.trim(), 
                     maxspeed: tr.querySelector('.f-maxspeed').value.trim(), pax: tr.querySelector('.f-pax').value.trim(), 
-                    acheck: tr.querySelector('.f-acheck').value.trim(), fuelcons: tr.querySelector('.f-fuelcons').value.trim(), 
-                    co2emis: tr.querySelector('.f-co2emis').value.trim(), price: tr.querySelector('.f-price').value.trim(), 
-                    cond: tr.querySelector('.f-cond').value.trim(), speed: tr.querySelector('.f-speed').value.trim()
+                    crew_str: tr.querySelector('.f-crew').value, crew_data: JSON.parse(tr.querySelector('.f-crew-data').value || '{}'),
+                    acheck: tr.querySelector('.f-acheck').value.trim(), maintcheck: tr.querySelector('.f-maintcheck').value.trim(), 
+                    fuelcons: tr.querySelector('.f-fuelcons').value.trim(), co2emis: tr.querySelector('.f-co2emis').value.trim(), 
+                    price: tr.querySelector('.f-price').value.trim(), speed: tr.querySelector('.f-speed').value.trim()
                 });
             }
         }); companyData.fleet = newFleet;
 
-        // Xử lý lưu Sân bay Global (Tránh trùng lặp)
+        // Xử lý Global Airports
         let newAirports = [];
         document.querySelectorAll('#airports-tbody tr').forEach(tr => {
             let name = tr.querySelector('.a-name').value.trim(); let icao = tr.querySelector('.a-icao').value.trim();
@@ -472,21 +468,21 @@
                 });
             }
         });
-        let airportMap = {};
-        globalAirports.forEach(a => airportMap[a.id] = a);
+        let airportMap = {}; globalAirports.forEach(a => airportMap[a.id] = a);
         newAirports.forEach(a => {
             let isDup = Object.values(airportMap).find(g => g.id !== a.id && ((g.icao && g.icao === a.icao) || (g.iata && g.iata === a.iata)));
-            if(!isDup) airportMap[a.id] = a; // Nếu không trùng lặp, lưu mới hoặc cập nhật
-        });
-        globalAirports = Object.values(airportMap);
+            if(!isDup) airportMap[a.id] = a; 
+        }); globalAirports = Object.values(airportMap);
 
         // Save Hubs
         let newHubs = [];
         document.querySelectorAll('#hubs-tbody tr').forEach(tr => {
             let name = tr.querySelector('.h-name').value.trim();
             if (name) {
+                // Đảm bảo chỉ 1 base được check
+                let isBase = tr.querySelector('.h-base').checked;
                 newHubs.push({
-                    id: tr.dataset.id, name: name, code: tr.querySelector('.h-code').value.trim(), base: tr.querySelector('.h-base').checked
+                    id: tr.dataset.id, name: name, country: tr.querySelector('.h-country').value.trim(), code: tr.querySelector('.h-code').value.trim(), base: isBase
                 });
             }
         }); companyData.hubs = newHubs;
@@ -502,7 +498,10 @@
         let newRoutes = [];
         document.querySelectorAll('#routes-tbody tr').forEach(tr => {
             let route = tr.querySelector('.r-route').value.trim(); let segment = tr.querySelector('.r-segment').value.trim();
-            if (route || segment) { newRoutes.push({ id: tr.dataset.id, route: route, segment: segment, aircraft: tr.querySelector('.r-aircraft').value }); }
+            let flightRouteId = tr.querySelector('.r-froute-id').value;
+            // config vẫn giữ nguyên trong route object nếu có sửa đổi từ modal
+            let existRoute = companyData.routes.find(r => r.id === tr.dataset.id);
+            if (route || segment) { newRoutes.push({ id: tr.dataset.id, fRouteId: flightRouteId, route: route, segment: segment, aircraft: tr.querySelector('.r-aircraft').value, config: existRoute?.config }); }
         }); companyData.routes = newRoutes;
 
         try {
@@ -602,11 +601,44 @@
             tbody.innerHTML = `<tr><td colspan="4" style="color: #10b981; font-weight: bold; padding: 20px;">Tất cả tàu bay đều hoạt động tốt!</td></tr>`;
         }
     }
-function renderAirportsTable() {
+function openCommonModal(html) {
+        document.getElementById('common-modal-content').innerHTML = html;
+        document.getElementById('common-modal').style.display = 'flex';
+    }
+    function closeCommonModal() { document.getElementById('common-modal').style.display = 'none'; }
+
+    // --- QUẢN LÝ HÃNG BAY (MAKERS) ---
+    function openMakersManager() {
+        let html = `<h2 style="margin-top:0; color:#0284c7; border-bottom:2px solid #e2e8f0; padding-bottom:10px;">🏢 Quản Lý Hãng Máy Bay</h2>
+        <div style="margin-bottom:10px; display:flex; gap:10px;">
+            <input type="text" id="new-maker-name" placeholder="Nhập tên hãng..." style="padding:10px; flex:1; border:1px solid #94a3b8; border-radius:4px;">
+            <button class="btn-add" onclick="addMaker()">Thêm Hãng</button>
+        </div>
+        <table style="width:100%; border-collapse:collapse; margin-bottom:15px;">
+            <tr style="background:#f1f5f9;"><th>STT</th><th>Tên Hãng Bay</th><th>Xóa</th></tr>
+            <tbody id="makers-tbody"></tbody>
+        </table>
+        <div style="text-align:right;"><button class="btn-main" onclick="closeCommonModal(); triggerSave(); renderFleetTable();">Đóng Lại</button></div>`;
+        openCommonModal(html); renderMakersList();
+    }
+    function renderMakersList() {
+        let tb = document.getElementById('makers-tbody'); tb.innerHTML = '';
+        companyData.makers.forEach((m, i) => {
+            tb.innerHTML += `<tr><td style="text-align:center">${i+1}</td><td style="text-align:center; font-weight:bold;">${m.name}</td><td style="text-align:center"><button class="btn-remove" onclick="removeMaker('${m.id}')">Xóa</button></td></tr>`;
+        });
+    }
+    function addMaker() {
+        let name = document.getElementById('new-maker-name').value.trim();
+        if(name) { companyData.makers.push({id: 'MK_'+Date.now(), name: name}); document.getElementById('new-maker-name').value = ''; renderMakersList(); }
+    }
+    function removeMaker(id) { companyData.makers = companyData.makers.filter(m => m.id !== id); renderMakersList(); }
+
+    // --- SÂN BAY & HUB ---
+    function renderAirportsTable() {
         let tbody = document.getElementById('airports-tbody'); tbody.innerHTML = '';
         if(globalAirports.length === 0) { addAirportRow(); } else { globalAirports.forEach(ap => addAirportRow(ap)); }
     }
-    function addAirportRow(ap = {id: 'AP_'+Date.now(), country: '', name: '', icao: '', iata: ''}) {
+    function addAirportRow(ap = {}) {
         let tbody = document.getElementById('airports-tbody'); let tr = document.createElement('tr');
         tr.dataset.id = ap.id || ('AP_'+Date.now()+Math.random());
         tr.innerHTML = `
@@ -619,120 +651,256 @@ function renderAirportsTable() {
         `;
         tbody.appendChild(tr); document.querySelectorAll('#airports-tbody tr').forEach((r, i) => r.querySelector('.a-stt').innerText = i + 1);
     }
-    function removeAirportRow(btn) {
-        if(confirm("Xóa sân bay này?")) { btn.closest('tr').remove(); triggerSave(); }
+    function removeAirportRow(btn) { if(confirm("Xóa sân bay này?")) { btn.closest('tr').remove(); triggerSave(); } }
+
+    function handleHubBaseCheck(cb) {
+        if(cb.checked) { document.querySelectorAll('.h-base').forEach(box => { if(box !== cb) box.checked = false; }); }
+        triggerSave();
+    }
+    function openIcaoIataManager(inputEle) {
+        currentActiveInput = inputEle;
+        let parts = inputEle.value.split('/'); let cIcao = parts[0] || ''; let cIata = parts[1] || '';
+        let html = `<h3>Nhập Mã ICAO & IATA</h3>
+        <label>Mã ICAO (4 Ký tự): <input type="text" id="modal-icao" value="${cIcao}" maxlength="4" style="text-transform:uppercase; display:block; width:100%; padding:8px; margin-bottom:10px;"></label>
+        <label>Mã IATA (3 Ký tự): <input type="text" id="modal-iata" value="${cIata}" maxlength="3" style="text-transform:uppercase; display:block; width:100%; padding:8px; margin-bottom:15px;"></label>
+        <button class="btn-main" onclick="saveIcaoIata()">Lưu Lại</button> <button class="btn-remove" onclick="closeCommonModal()">Hủy</button>`;
+        openCommonModal(html);
+    }
+    function saveIcaoIata() {
+        let icao = document.getElementById('modal-icao').value.toUpperCase().replace(/[^A-Z]/g,'');
+        let iata = document.getElementById('modal-iata').value.toUpperCase().replace(/[^A-Z]/g,'');
+        if(currentActiveInput) { currentActiveInput.value = (icao || 'XXXX') + '/' + (iata || 'XXX'); triggerSave(); }
+        closeCommonModal();
     }
 
-    // --- HUB ---
     function renderHubsTable() {
         let tbody = document.getElementById('hubs-tbody'); tbody.innerHTML = '';
         if(companyData.hubs.length === 0) { addHubRow(); } else { companyData.hubs.forEach(hb => addHubRow(hb)); }
     }
-    function addHubRow(hb = {id: 'HB_'+Date.now(), name: '', code: '', base: false}) {
+    function addHubRow(hb = {}) {
         let tbody = document.getElementById('hubs-tbody'); let tr = document.createElement('tr');
         tr.dataset.id = hb.id || ('HB_'+Date.now());
         tr.innerHTML = `
             <td class="h-stt" style="text-align: center; font-weight: bold;"></td>
             <td><input type="text" class="h-name" value="${hb.name || ''}" placeholder="Tên HUB..." style="width: 100%; box-sizing: border-box;" oninput="triggerSave()"></td>
-            <td><input type="text" class="h-code" value="${hb.code || ''}" placeholder="ICAO/IATA..." style="width: 100%; box-sizing: border-box; text-align: center;" oninput="triggerSave()"></td>
-            <td><input type="radio" name="base-hub" class="h-base" ${hb.base ? 'checked' : ''} onchange="triggerSave()" style="width:20px; height:20px; cursor:pointer;"></td>
+            <td><input type="text" class="h-country" value="${hb.country || ''}" placeholder="Tên Quốc Gia/Mã (Vietnam/VN)" style="width: 100%; box-sizing: border-box; text-align:center;" oninput="triggerSave()"></td>
+            <td><input type="text" class="h-code" value="${hb.code || ''}" readonly onclick="openIcaoIataManager(this)" placeholder="Bấm chọn..." style="width: 100%; box-sizing: border-box; text-align: center; cursor:pointer; background:#f8fafc; font-weight:bold;"></td>
+            <td style="text-align:center;"><input type="checkbox" class="h-base" ${hb.base ? 'checked' : ''} onchange="handleHubBaseCheck(this)" style="width:20px; height:20px; cursor:pointer;"></td>
             <td><button class="btn-remove" onclick="removeHubRow(this)">Xóa</button></td>
         `;
         tbody.appendChild(tr); document.querySelectorAll('#hubs-tbody tr').forEach((r, i) => r.querySelector('.h-stt').innerText = i + 1);
     }
-    function removeHubRow(btn) {
-        if(confirm("Chắc chắn muốn xóa HUB này?")) { btn.closest('tr').remove(); triggerSave(); }
-    }
+    function removeHubRow(btn) { if(confirm("Chắc chắn muốn xóa HUB này?")) { btn.closest('tr').remove(); triggerSave(); } }
 
-    // --- TUYẾN BAY (ROUTE NETWORKS) ---
     function renderFlightRoutesTable() {
         let tbody = document.getElementById('flight-routes-tbody'); tbody.innerHTML = '';
         if(companyData.flightRoutes.length === 0) { addFlightRouteRow(); } else { companyData.flightRoutes.forEach(fr => addFlightRouteRow(fr)); }
     }
-    function addFlightRouteRow(fr = {id: 'FR_'+Date.now(), hub: '', dest: ''}) {
+    function addFlightRouteRow(fr = {}) {
         let tbody = document.getElementById('flight-routes-tbody'); let tr = document.createElement('tr');
         tr.dataset.id = fr.id || ('FR_'+Date.now());
-        
         let hubOpts = companyData.hubs.map(h => `<option value="${h.id}" ${fr.hub===h.id ? 'selected':''}>${h.name} (${h.code})</option>`).join('');
         let destOpts = globalAirports.map(a => `<option value="${a.id}" ${fr.dest===a.id ? 'selected':''}>${a.name} (${a.icao||'---'} / ${a.iata||'---'})</option>`).join('');
-        
         tr.innerHTML = `
             <td class="fr-stt" style="text-align: center; font-weight: bold;"></td>
-            <td><select class="fr-hub" onchange="triggerSave()" style="width: 100%; box-sizing: border-box;"><option value="">-- Chọn HUB --</option>${hubOpts}</select></td>
-            <td><select class="fr-dest" onchange="triggerSave()" style="width: 100%; box-sizing: border-box;"><option value="">-- Sân Bay Đến --</option>${destOpts}</select></td>
+            <td><select class="fr-hub" onchange="triggerSave()" style="width: 100%; padding:6px;"><option value="">-- Chọn HUB --</option>${hubOpts}</select></td>
+            <td><select class="fr-dest" onchange="triggerSave()" style="width: 100%; padding:6px;"><option value="">-- Chọn Sân Bay Đến --</option>${destOpts}</select></td>
             <td><button class="btn-remove" onclick="removeFlightRouteRow(this)">Xóa</button></td>
         `;
         tbody.appendChild(tr); document.querySelectorAll('#flight-routes-tbody tr').forEach((r, i) => r.querySelector('.fr-stt').innerText = i + 1);
     }
     function removeFlightRouteRow(btn) { if(confirm("Xóa tuyến bay này?")) { btn.closest('tr').remove(); triggerSave(); } }
 
-    // --- QUẢN LÝ ĐỘI BAY (Tuyến & Máy bay) ---
-    function handleRouteCodeInput(inputEle, type) {
-        let prefixLen = type === 'route' ? 2 : 4; let className = type === 'route' ? '.r-route' : '.r-segment';
-        let msg = type === 'route' ? 'Nhập 2 ký tự in hoa cho Mã Tuyến (VD: RO):' : 'Nhập 4 ký tự in hoa cho Mã Chặng (VD: ROVN):';
-        let prefix = prompt(msg);
-        if(prefix) {
-            prefix = prefix.toUpperCase().replace(/[^A-Z]/g, '').substring(0, prefixLen);
-            if(prefix.length === prefixLen) {
-                let maxNum = 0;
-                document.querySelectorAll(className).forEach(inp => {
-                    if (inp !== inputEle && inp.value.startsWith(prefix + '-')) {
-                        let numPart = parseInt(inp.value.split('-')[1]); if (!isNaN(numPart) && numPart > maxNum) maxNum = numPart;
-                    }
-                });
-                maxNum++; inputEle.value = prefix + '-' + maxNum.toString().padStart(3, '0'); triggerSave();
-            } else { alert(`Vui lòng nhập đúng ${prefixLen} ký tự chữ cái in hoa!`); }
+    // --- CẤU HÌNH MÁY BAY (FLEET) ---
+    function openCrewManager(inputEle) {
+        currentActiveInput = inputEle;
+        let dataInput = inputEle.nextElementSibling;
+        let data = JSON.parse(dataInput.value || '{"p":0,"c":0,"e":0,"t":0}');
+        let html = `<h3>Phi Hành Đoàn</h3>
+        <label style="display:block; margin-bottom:5px;">Pilots: <input type="number" id="c-p" value="${data.p||0}" style="padding:5px; width:60px;"></label>
+        <label style="display:block; margin-bottom:5px;">Crew: <input type="number" id="c-c" value="${data.c||0}" style="padding:5px; width:60px;"></label>
+        <label style="display:block; margin-bottom:5px;">Engineers: <input type="number" id="c-e" value="${data.e||0}" style="padding:5px; width:60px;"></label>
+        <label style="display:block; margin-bottom:15px;">Tech: <input type="number" id="c-t" value="${data.t||0}" style="padding:5px; width:60px;"></label>
+        <button class="btn-main" onclick="saveCrew()">Lưu</button> <button class="btn-remove" onclick="closeCommonModal()">Hủy</button>`;
+        openCommonModal(html);
+    }
+    function saveCrew() {
+        let p = document.getElementById('c-p').value||0; let c = document.getElementById('c-c').value||0;
+        let e = document.getElementById('c-e').value||0; let t = document.getElementById('c-t').value||0;
+        if(currentActiveInput) {
+            currentActiveInput.value = `P:${p}, C:${c}, E:${e}, T:${t}`;
+            currentActiveInput.nextElementSibling.value = JSON.stringify({p,c,e,t});
+            triggerSave();
+        }
+        closeCommonModal();
+    }
+
+    function renderFleetTable() {
+        let tbody = document.getElementById('fleet-tbody'); tbody.innerHTML = '';
+        if(companyData.fleet.length === 0) { addFleetRow(); } else { companyData.fleet.forEach(ac => addFleetRow(ac)); }
+    }
+    function addFleetRow(ac = {}) {
+        let tbody = document.getElementById('fleet-tbody'); let tr = document.createElement('tr');
+        tr.dataset.id = ac.id || ('AC_'+Date.now());
+        
+        let makerOpts = companyData.makers.map(m => `<option value="${m.id}" ${ac.maker===m.id?'selected':''}>${m.name}</option>`).join('');
+
+        tr.innerHTML = `
+            <td class="f-stt" style="text-align: center; font-weight: bold;"></td>
+            <td><select class="f-maker" style="width: 100%; box-sizing: border-box;" onchange="triggerSave()"><option value="">-- Hãng --</option>${makerOpts}</select></td>
+            <td><input type="text" class="f-model" value="${ac.model || ''}" placeholder="Dòng..." style="width: 100%; box-sizing: border-box;" oninput="triggerSave()"></td>
+            <td><input type="text" class="f-range" value="${ac.range || ''}" placeholder="km" style="width: 100%; box-sizing: border-box; text-align: center;" oninput="formatCurrency(this); triggerSave()"></td>
+            <td><input type="text" class="f-maxspeed" value="${ac.maxspeed || ''}" placeholder="km/h" style="width: 100%; box-sizing: border-box; text-align: center;" oninput="formatCurrency(this); triggerSave()"></td>
+            <td><input type="text" class="f-pax" value="${ac.pax || ''}" placeholder="Ghế Y" style="width: 100%; box-sizing: border-box; text-align: center; color:#eab308; font-weight:bold;" oninput="formatCurrency(this); triggerSave()"></td>
+            <td>
+                <input type="text" class="f-crew" value="${ac.crew_str || ''}" readonly onclick="openCrewManager(this)" placeholder="Nhấn nhập..." style="width: 100%; box-sizing: border-box; text-align: center; cursor:pointer; font-size:14px; background:#f8fafc;">
+                <input type="hidden" class="f-crew-data" value='${JSON.stringify(ac.crew_data||{})}'>
+            </td>
+            <td><input type="text" class="f-acheck" value="${ac.acheck || ''}" placeholder="$" style="width: 100%; box-sizing: border-box; text-align: center;" oninput="formatCurrency(this); triggerSave()"></td>
+            <td><input type="text" class="f-maintcheck" value="${ac.maintcheck || ''}" placeholder="Giờ" style="width: 100%; box-sizing: border-box; text-align: center;" oninput="formatCurrency(this); triggerSave()"></td>
+            <td><input type="text" class="f-fuelcons" value="${ac.fuelcons || ''}" placeholder="Lbs/km" style="width: 100%; box-sizing: border-box; text-align: center;" oninput="triggerSave()"></td>
+            <td><input type="text" class="f-co2emis" value="${ac.co2emis || ''}" placeholder="kg/km" style="width: 100%; box-sizing: border-box; text-align: center;" oninput="triggerSave()"></td>
+            <td><input type="text" class="f-price" value="${ac.price || ''}" placeholder="$" style="width: 100%; box-sizing: border-box; text-align: center;" oninput="formatCurrency(this); triggerSave()"></td>
+            <td><input type="text" class="f-speed" value="${ac.speed || ''}" placeholder="km/h" style="width: 100%; box-sizing: border-box; text-align: center;" oninput="formatCurrency(this); triggerSave()"></td>
+            <td><button class="btn-remove" onclick="if(confirm('Xóa tàu bay?')) { this.closest('tr').remove(); triggerSave(); }">Bán</button></td>
+        `;
+        tbody.appendChild(tr); document.querySelectorAll('#fleet-tbody tr').forEach((r, i) => r.querySelector('.f-stt').innerText = i + 1);
+    }
+
+    // --- PHÂN CÔNG ĐỘI BAY (ROUTES) ---
+    function openRouteSelector(btnEle) {
+        currentActiveRowId = btnEle.closest('tr').dataset.id;
+        let html = `<h3 style="margin-top:0;">🗺️ Chọn Chặng Bay</h3><div style="max-height:400px; overflow-y:auto;"><table style="width:100%; border-collapse:collapse; text-align:left;">
+            <tr style="background:#f1f5f9;"><th>Tuyến Bay (Từ HUB -> Đích)</th><th style="text-align:center;">Chọn</th></tr>`;
+        
+        companyData.flightRoutes.forEach(fr => {
+            let hub = companyData.hubs.find(h => h.id === fr.hub); let dest = globalAirports.find(a => a.id === fr.dest);
+            if(hub && dest) {
+                html += `<tr><td style="padding:10px; border-bottom:1px solid #e2e8f0;"><b>${hub.name}</b> (${hub.code||'---'}) ➔ <b>${dest.name}</b> (${dest.icao||'---'})</td>
+                <td style="text-align:center; border-bottom:1px solid #e2e8f0;"><button class="btn-add" onclick="processFlightRouteAssign('${fr.id}')">Chọn</button></td></tr>`;
+            }
+        });
+        html += `</table></div><div style="text-align:right; margin-top:15px;"><button class="btn-remove" onclick="closeCommonModal()">Đóng</button></div>`;
+        openCommonModal(html);
+    }
+
+    function processFlightRouteAssign(fRouteId) {
+        let tr = document.querySelector(`#routes-tbody tr[data-id="${currentActiveRowId}"]`);
+        let rInput = tr.querySelector('.r-route'); let sInput = tr.querySelector('.r-segment');
+        tr.querySelector('.r-froute-id').value = fRouteId;
+        
+        let fr = companyData.flightRoutes.find(r => r.id === fRouteId);
+        let hub = companyData.hubs.find(h => h.id === fr.hub); let dest = globalAirports.find(a => a.id === fr.dest);
+        
+        // Tạo Mã Tuyến: Lấy mã QG của HUB (2 char)
+        let countryCode = "XX";
+        if(hub.country && hub.country.includes('/')) { countryCode = hub.country.split('/')[1].trim().substring(0,2).toUpperCase(); } 
+        else if(hub.country) { countryCode = hub.country.substring(0,2).toUpperCase(); }
+        
+        // Tạo Mã Chặng: 2 kí tự ICAO Hub + 2 kí tự ICAO Dest
+        let hubIcao = hub.code ? hub.code.split('/')[0].trim() : "XXXX";
+        let destIcao = dest.icao || "XXXX";
+        let segPrefix = (hubIcao.slice(-2) + destIcao.slice(-2)).toUpperCase();
+        
+        let maxRoute = 0, maxSeg = 0;
+        document.querySelectorAll('.r-route').forEach(inp => { if(inp.value.startsWith(countryCode+'-')) { let num = parseInt(inp.value.split('-')[1]); if(num > maxRoute) maxRoute = num; } });
+        document.querySelectorAll('.r-segment').forEach(inp => { if(inp.value.startsWith(segPrefix+'-')) { let num = parseInt(inp.value.split('-')[1]); if(num > maxSeg) maxSeg = num; } });
+        
+        rInput.value = countryCode + '-' + (maxRoute + 1).toString().padStart(3,'0');
+        sInput.value = segPrefix + '-' + (maxSeg + 1).toString().padStart(3,'0');
+        
+        closeCommonModal(); triggerSave();
+    }
+
+    function checkConfigChange(baseY) {
+        let y = parseInt(document.getElementById('cfg-y').value)||0; let j = parseInt(document.getElementById('cfg-j').value)||0; let f = parseInt(document.getElementById('cfg-f').value)||0;
+        if(y !== baseY || j > 0 || f > 0) {
+            document.getElementById('cfg-mod-area').style.display = 'block'; document.getElementById('cfg-default-area').style.display = 'none';
+        } else {
+            document.getElementById('cfg-mod-area').style.display = 'none'; document.getElementById('cfg-default-area').style.display = 'block';
         }
     }
 
-    // Modal hiển thị thông tin Máy Bay
-    function showAircraftInfo(acId) {
-        if(!acId) return alert("Bạn chưa chọn dòng máy bay cho tuyến này!");
-        let ac = companyData.fleet.find(f => f.id === acId);
-        if(!ac) return alert("Dữ liệu máy bay không còn tồn tại!");
-        
+    function saveAcConfig(routeId, isMod) {
+        let rt = companyData.routes.find(r => r.id === routeId); if(!rt.config) rt.config = {};
+        rt.config.y = parseInt(document.getElementById('cfg-y').value)||0;
+        rt.config.j = parseInt(document.getElementById('cfg-j').value)||0;
+        rt.config.f = parseInt(document.getElementById('cfg-f').value)||0;
+        rt.config.cost = isMod ? document.getElementById('cfg-cost').value : '';
+        triggerSave(); closeCommonModal(); alert('Đã lưu dữ liệu Cấu Hình Tàu Bay thành công!');
+    }
+
+    function showAircraftInfo(acId, routeId) {
+        if(!acId) return alert("Bạn chưa chọn dòng máy bay!");
+        let ac = companyData.fleet.find(f => f.id === acId); if(!ac) return alert("Tàu bay không tồn tại!");
+        let rt = companyData.routes.find(r => r.id === routeId) || {};
+        let mk = companyData.makers.find(m => m.id === ac.maker);
+        let makerName = mk ? mk.name : '---';
+
+        let baseY = parseInt(ac.pax.replace(/\D/g, ''))||0;
+        let cY = rt.config?.y !== undefined ? rt.config.y : baseY; let cJ = rt.config?.j || 0; let cF = rt.config?.f || 0;
+        let isModified = (cY !== baseY || cJ > 0 || cF > 0);
+
         let html = `
-            <div style="display:flex; justify-content:space-between;"><b>Hãng sản xuất:</b> <span style="color:#0284c7; font-weight:bold;">${ac.maker || '---'}</span></div>
-            <div style="display:flex; justify-content:space-between;"><b>Dòng máy bay:</b> <span style="color:#0284c7; font-weight:bold;">${ac.model || '---'}</span></div><hr>
-            <div style="display:flex; justify-content:space-between;"><b>Tầm bay (Range):</b> <span>${ac.range || 0} km</span></div>
-            <div style="display:flex; justify-content:space-between;"><b>Tốc độ tối đa:</b> <span>${ac.maxspeed || 0} km/h</span></div>
-            <div style="display:flex; justify-content:space-between;"><b>Tốc độ bay TT:</b> <span>${ac.speed || 0} km/h</span></div>
-            <div style="display:flex; justify-content:space-between;"><b>Sức chứa (Pax):</b> <span>${ac.pax || 0} Hành khách</span></div><hr>
-            <div style="display:flex; justify-content:space-between;"><b>Tiêu hao nhiên liệu:</b> <span style="color:#ef4444;">${ac.fuelcons || 0} Lbs/km</span></div>
-            <div style="display:flex; justify-content:space-between;"><b>Phát thải CO2:</b> <span style="color:#ef4444;">${ac.co2emis || 0} kg/km</span></div>
-            <div style="display:flex; justify-content:space-between;"><b>Độ mài mòn (Cond):</b> <span style="font-weight:bold; color:${parseInt(ac.cond) < 50 ? '#ef4444' : '#10b981'}">${ac.cond || 100}%</span></div><hr>
-            <div style="display:flex; justify-content:space-between;"><b>Giá mua (Market):</b> <span style="color:#10b981; font-weight:bold;">${ac.price || 0} $</span></div>
-            <div style="display:flex; justify-content:space-between;"><b>Chi phí A-Check:</b> <span>${ac.acheck || 0} $</span></div>
+            <h2 style="margin-top:0; color:#0284c7; border-bottom:2px solid #e2e8f0; padding-bottom:10px;">📄 CHI TIẾT TÀU BAY</h2>
+            <div style="display:flex; justify-content:space-between; margin-bottom:5px;"><b>Hãng sản xuất:</b> <span style="color:#0284c7; font-weight:bold;">${makerName}</span></div>
+            <div style="display:flex; justify-content:space-between; margin-bottom:5px;"><b>Dòng máy bay:</b> <span style="color:#0284c7; font-weight:bold;">${ac.model || '---'}</span></div>
+            <div style="display:flex; justify-content:space-between; margin-bottom:5px;"><b>Tầm bay (Range):</b> <span>${ac.range || 0} km</span></div>
+            <div style="display:flex; justify-content:space-between; margin-bottom:5px;"><b>Tốc độ TT:</b> <span>${ac.speed || 0} km/h</span></div>
+            <div style="display:flex; justify-content:space-between; margin-bottom:5px;"><b>Tiêu hao nhiên liệu:</b> <span style="color:#ef4444;">${ac.fuelcons || 0} Lbs/km</span></div>
+            
+            <div style="border:2px solid #e2e8f0; background:#f8fafc; padding:15px; border-radius:8px; margin-top:15px;">
+                <p style="margin:0 0 10px 0; font-weight:bold; color:#0f172a;">🛠 Sửa Đổi Cấu Hình (Sức chứa)</p>
+                <div style="display:flex; gap:10px; margin-bottom:15px; align-items:center;">
+                    <label>Y: <input type="number" id="cfg-y" value="${cY}" style="width:60px; padding:5px; border:1px solid #cbd5e1; font-weight:bold; color:#eab308;" oninput="checkConfigChange(${baseY})"></label>
+                    <label>J: <input type="number" id="cfg-j" value="${cJ}" style="width:60px; padding:5px; border:1px solid #cbd5e1; font-weight:bold; color:#3b82f6;" oninput="checkConfigChange(${baseY})"></label>
+                    <label>F: <input type="number" id="cfg-f" value="${cF}" style="width:60px; padding:5px; border:1px solid #cbd5e1; font-weight:bold; color:#a855f7;" oninput="checkConfigChange(${baseY})"></label>
+                </div>
+                <div id="cfg-mod-area" style="display:${isModified ? 'block':'none'}; border-top:1px dashed #cbd5e1; padding-top:10px;">
+                    <label style="display:block; margin-bottom:10px; color:#ef4444; font-weight:bold;">Giá tiền sửa đổi cấu hình ($): <input type="text" id="cfg-cost" value="${rt.config?.cost||''}" style="width:150px; padding:5px;" oninput="formatCurrency(this)"></label>
+                    <button class="btn-main" style="background:#f59e0b;" onclick="saveAcConfig('${routeId}', true)">Lưu Cấu Hình Mới</button>
+                </div>
+                <div id="cfg-default-area" style="display:${!isModified ? 'block':'none'}; border-top:1px dashed #cbd5e1; padding-top:10px;">
+                    <p style="color:#10b981; margin:0 0 10px 0; font-weight:bold;">Giá mua thực tế (Theo Fleet): ${ac.price||0} $</p>
+                    <button class="btn-main" onclick="saveAcConfig('${routeId}', false)">Giữ Cấu Hình Gốc</button>
+                </div>
+            </div>
+            <div style="text-align:right; margin-top:15px;"><button class="btn-remove" onclick="closeCommonModal()">Đóng Lại</button></div>
         `;
-        document.getElementById('modal-content').innerHTML = html;
-        document.getElementById('ac-modal').style.display = 'flex';
+        openCommonModal(html);
     }
 
     function renderRoutesTable() {
         let tbody = document.getElementById('routes-tbody'); tbody.innerHTML = '';
         if(companyData.routes.length === 0) { addRouteRow(); } else { companyData.routes.forEach(rt => addRouteRow(rt)); }
     }
-    function addRouteRow(rt = {id: 'RT_'+Date.now(), route: '', segment: '', aircraft: ''}) {
+    function addRouteRow(rt = {}) {
         let tbody = document.getElementById('routes-tbody'); let tr = document.createElement('tr');
         tr.dataset.id = rt.id || ('RT_'+Date.now());
         
-        let acOpts = companyData.fleet.map(f => `<option value="${f.id}" ${rt.aircraft === f.id ? 'selected' : ''}>[${f.cond}%] ${f.maker} ${f.model}</option>`).join('');
+        let acOpts = companyData.fleet.map(f => {
+            let mName = companyData.makers.find(m => m.id === f.maker)?.name || 'Hãng';
+            return `<option value="${f.id}" ${rt.aircraft === f.id ? 'selected' : ''}>${mName} ${f.model}</option>`;
+        }).join('');
 
         tr.innerHTML = `
             <td class="r-stt" style="text-align: center; font-weight: bold;"></td>
-            <td><input type="text" class="r-route" value="${rt.route || ''}" readonly onclick="handleRouteCodeInput(this, 'route')" placeholder="Nhấn tạo Tuyến..." style="width: 100%; box-sizing: border-box; text-align: center; cursor: pointer; background: #f8fafc; border: 2px dashed #94a3b8; font-weight: bold; color: #0284c7;"></td>
-            <td><input type="text" class="r-segment" value="${rt.segment || ''}" readonly onclick="handleRouteCodeInput(this, 'segment')" placeholder="Nhấn tạo Chặng..." style="width: 100%; box-sizing: border-box; text-align: center; cursor: pointer; background: #f8fafc; border: 2px dashed #94a3b8; font-weight: bold; color: #10b981;"></td>
+            <td style="text-align:center;">
+                <button class="btn-main" style="padding: 6px 10px; font-size:12px; background:#10b981;" onclick="openRouteSelector(this)">Chọn Chặng</button>
+                <input type="hidden" class="r-froute-id" value="${rt.fRouteId || ''}">
+            </td>
+            <td><input type="text" class="r-route" value="${rt.route || ''}" readonly placeholder="Tự điền..." style="width: 100%; box-sizing: border-box; text-align: center; background: #f1f5f9; font-weight: bold; color: #0284c7;"></td>
+            <td><input type="text" class="r-segment" value="${rt.segment || ''}" readonly placeholder="Tự điền..." style="width: 100%; box-sizing: border-box; text-align: center; background: #f1f5f9; font-weight: bold; color: #10b981;"></td>
             <td>
                 <div style="display:flex; gap:8px;">
-                    <select class="r-aircraft" onchange="triggerSave()" style="flex:1;"><option value="">-- Chọn --</option>${acOpts}</select>
-                    <button class="btn-main" style="padding: 6px 12px; background: #3b82f6;" onclick="showAircraftInfo(this.previousElementSibling.value)">🔍 Xem</button>
+                    <select class="r-aircraft" onchange="triggerSave()" style="flex:1; padding:6px;"><option value="">-- Chọn Máy Bay --</option>${acOpts}</select>
+                    <button class="btn-main" style="padding: 6px 12px; background: #3b82f6;" onclick="showAircraftInfo(this.previousElementSibling.value, '${tr.dataset.id}')">🔍 Xem / Cấu hình</button>
                 </div>
             </td>
-            <td><button class="btn-remove" onclick="removeRouteRow(this)">Xóa</button></td>
+            <td><button class="btn-remove" onclick="if(confirm('Xóa chặng phân công?')) { this.closest('tr').remove(); triggerSave(); }">Xóa</button></td>
         `;
         tbody.appendChild(tr); document.querySelectorAll('#routes-tbody tr').forEach((r, i) => r.querySelector('.r-stt').innerText = i + 1);
     }
-    function removeRouteRow(btn) { if(confirm("Chắc chắn muốn xóa phân công chuyến bay này?")) { btn.closest('tr').remove(); triggerSave(); } }
     loadAuth();
 </script>
 </body>
