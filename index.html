@@ -149,9 +149,11 @@
                 <div id="myDropdown" class="dropdown-content">
                     <a onclick="switchModule('module-dashboard')">📊 Bảng Tổng Quan</a>
                     <a onclick="switchModule('module-fleet')">⚙️ Thông Tin Cấu Hình Máy Bay</a>
+                    <a onclick="switchModule('module-hubs')">🏢 Quản Lý HUB</a>
+                    <a onclick="switchModule('module-airports')">🌍 Quản Lý Sân Bay (Global)</a>
+                    <a onclick="switchModule('module-flight-routes')">🗺️ Cấu Hình Tuyến Bay</a>
                     <a onclick="switchModule('module-routes')">✈️ Quản Lý Đội Bay</a>
                     <a onclick="switchModule('module-maintenance')">🔧 Lịch Bảo Trì (A/C Checks)</a>
-                    <a onclick="switchModule('module-airports')">🛫 Quản Lý Sân Bay</a>
                     <a onclick="handleLogout()" style="color:#ef4444; border-top: 1px solid #e2e8f0; font-weight: bold;">🚪 Đăng Xuất</a>
                 </div>
             </div>
@@ -187,7 +189,8 @@
             </div>
         </div>
 <div id="module-airports" class="module">
-            <h2 class="module-title">Danh Sách Sân Bay (Hubs/Routes)</h2>
+            <h2 class="module-title">Danh Sách Sân Bay (Global)</h2>
+            <p style="text-align: center; color: #64748b; font-style: italic;">Dữ liệu chia sẻ chung. Bất kỳ ai nhập cũng sẽ được lưu lên hệ thống toàn cầu.</p>
             <div style="text-align: right; margin-bottom: 15px;">
                 <button class="btn-add" onclick="addAirportRow()">+ Thêm Sân Bay Mới</button>
             </div>
@@ -203,29 +206,78 @@
                             <th style="width: 11%;">Thao Tác</th>
                         </tr>
                     </thead>
-                    <tbody id="airports-tbody">
-                    </tbody>
+                    <tbody id="airports-tbody"></tbody>
                 </table>
             </div>
         </div>
-        <div id="module-routes" class="module">
-            <h2 class="module-title">Quản Lý Đội Bay (Tuyến & Chặng)</h2>
+
+        <div id="module-hubs" class="module">
+            <h2 class="module-title">Quản Lý HUB (Căn Cứ Của Hãng)</h2>
             <div style="text-align: right; margin-bottom: 15px;">
-                <button class="btn-add" onclick="addRouteRow()">+ Thêm Chuyến Bay Mới</button>
+                <button class="btn-add" onclick="addHubRow()">+ Thêm HUB Mới</button>
+            </div>
+            <div style="overflow-x: auto;">
+                <table style="min-width: 600px;">
+                    <thead>
+                        <tr>
+                            <th style="width: 10%;">STT</th>
+                            <th style="width: 40%;">Tên HUB</th>
+                            <th style="width: 20%;">Mã ICAO/IATA</th>
+                            <th style="width: 15%;">Chọn Base</th>
+                            <th style="width: 15%;">Thao Tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="hubs-tbody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="module-flight-routes" class="module">
+            <h2 class="module-title">Danh Sách Tuyến Bay (Route Networks)</h2>
+            <div style="text-align: right; margin-bottom: 15px;">
+                <button class="btn-add" onclick="addFlightRouteRow()">+ Thêm Tuyến Mới</button>
             </div>
             <div style="overflow-x: auto;">
                 <table style="min-width: 800px;">
                     <thead>
                         <tr>
-                            <th style="width: 10%;">STT</th>
-                            <th style="width: 40%;">Mã Tuyến bay (XX-NNN)</th>
-                            <th style="width: 40%;">Mã chặng bay (XXXX-NNN)</th>
+                            <th style="width: 5%;">STT</th>
+                            <th style="width: 40%;">Sân bay xuất phát (Từ HUB)</th>
+                            <th style="width: 40%;">Sân bay đến (Destination)</th>
+                            <th style="width: 15%;">Thao Tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="flight-routes-tbody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="module-routes" class="module">
+            <h2 class="module-title">Quản Lý Đội Bay (Tuyến & Chặng & Tàu Bay)</h2>
+            <div style="text-align: right; margin-bottom: 15px;">
+                <button class="btn-add" onclick="addRouteRow()">+ Phân Công Đội Bay</button>
+            </div>
+            <div style="overflow-x: auto;">
+                <table style="min-width: 1000px;">
+                    <thead>
+                        <tr>
+                            <th style="width: 5%;">STT</th>
+                            <th style="width: 25%;">Mã Tuyến bay (XX-NNN)</th>
+                            <th style="width: 25%;">Mã chặng bay (XXXX-NNN)</th>
+                            <th style="width: 35%;">Chọn Dòng Máy Bay</th>
                             <th style="width: 10%;">Thao Tác</th>
                         </tr>
                     </thead>
-                    <tbody id="routes-tbody">
-                    </tbody>
+                    <tbody id="routes-tbody"></tbody>
                 </table>
+            </div>
+        </div>
+
+        <div id="ac-modal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(15, 23, 42, 0.7); z-index:99999; align-items:center; justify-content:center;">
+            <div style="background:#fff; padding:30px; border-radius:12px; min-width:350px; max-width:500px; box-shadow: 0 25px 50px rgba(0,0,0,0.3);">
+                <h2 style="margin-top:0; color:#0284c7; border-bottom:2px solid #e2e8f0; padding-bottom:10px;">📄 CHI TIẾT TÀU BAY</h2>
+                <div id="modal-content" style="line-height:1.8; font-size:16px; margin-bottom:20px; color:#334155;"></div>
+                <div style="text-align:right;"><button class="btn-remove" onclick="document.getElementById('ac-modal').style.display='none'">Đóng Lại</button></div>
             </div>
         </div>
 
@@ -270,17 +322,15 @@
     let systemUsers = {};
     let companyData = {
         balance: "", stock: "", fuel: "", co2: "",
-        fleet: [], airports: [], routes: [] // Thêm mảng routes
+        fleet: [], hubs: [], flightRoutes: [], routes: []
     };
+    let globalAirports = []; // Lưu trữ sân bay toàn cầu
     let saveTimer = null;
 
     async function loadAuth() {
         try {
             let res = await fetch(AUTH_URL);
-            if (res.ok) {
-                let data = await res.json();
-                if (data) systemUsers = data;
-            }
+            if (res.ok) { let data = await res.json(); if (data) systemUsers = data; }
         } catch(e) { console.error("Auth Load Error", e); }
     }
 
@@ -302,10 +352,7 @@
         if (systemUsers[phone]) return alert("Tài khoản đã tồn tại!");
 
         systemUsers[phone] = { name: name, password: pass };
-        await saveAuth();
-        alert("Thành lập hãng thành công! Vui lòng đăng nhập.");
-        switchAuth('login');
-        document.getElementById('login-phone').value = phone;
+        await saveAuth(); alert("Thành lập hãng thành công! Vui lòng đăng nhập."); switchAuth('login'); document.getElementById('login-phone').value = phone;
     }
 
     async function handleLogin() {
@@ -315,8 +362,7 @@
         if (!phone || !pass) return alert("Vui lòng nhập ID và Mật khẩu!");
         if (!systemUsers[phone] || systemUsers[phone].password !== pass) return alert("Sai tài khoản hoặc mật khẩu!");
 
-        activePhone = phone;
-        document.getElementById('auth-screen').style.display = 'none';
+        activePhone = phone; document.getElementById('auth-screen').style.display = 'none';
         document.getElementById('main-app').style.display = 'block';
         document.getElementById('user-display-name').innerText = `CEO: ${systemUsers[phone].name}`;
         
@@ -325,16 +371,12 @@
 
     function handleLogout() {
         if(confirm("Xác nhận đăng xuất khỏi hệ thống?")) {
-            activePhone = null;
-            companyData = { balance: "", stock: "", fuel: "", co2: "", fleet: [], airports: [], routes: [] };
+            activePhone = null; companyData = { balance: "", stock: "", fuel: "", co2: "", fleet: [], hubs: [], flightRoutes: [], routes: [] };
             document.getElementById('auth-screen').style.display = 'flex';
-            document.getElementById('main-app').style.display = 'none';
-            document.getElementById('login-pass').value = '';
+            document.getElementById('main-app').style.display = 'none'; document.getElementById('login-pass').value = '';
         }
     }
-    /* =========================================================================
-       GIAO DIỆN & NAVIGATION
-       ========================================================================= */
+
     function toggleMenu() { document.getElementById("myDropdown").classList.toggle("show"); }
     window.onclick = function(e) {
         if (!e.target.matches('.menu-btn')) {
@@ -348,7 +390,10 @@
         for (let i=0; i<mods.length; i++) mods[i].classList.remove("active");
         document.getElementById(modId).classList.add("active");
         
+        // Tự động re-render các bảng phụ thuộc để lấy dữ liệu mới nhất (Dropdowns)
         if(modId === 'module-maintenance') renderMaintenance();
+        if(modId === 'module-flight-routes') renderFlightRoutesTable();
+        if(modId === 'module-routes') renderRoutesTable();
     }
 
     function formatCurrency(input) {
@@ -369,27 +414,27 @@
     async function loadCompanyData() {
         setSyncStatus("(Đang tải...)", "#f59e0b");
         try {
+            // Lấy dữ liệu Sân bay Global trước
+            let resGlobal = await fetch(DB_BASE_URL + "globalAirports.json");
+            if (resGlobal.ok) { let dataG = await resGlobal.json(); if(dataG) globalAirports = dataG; }
+
+            // Lấy dữ liệu Company
             let res = await fetch(getCompanyDataURL());
-            if (res.ok) {
-                let data = await res.json();
-                if (data) companyData = Object.assign(companyData, data);
-            }
+            if (res.ok) { let data = await res.json(); if (data) companyData = Object.assign(companyData, data); }
+            
             if(!companyData.fleet) companyData.fleet = [];
-            if(!companyData.airports) companyData.airports = [];
-            if(!companyData.routes) companyData.routes = []; // Khởi tạo nếu chưa có
+            if(!companyData.hubs) companyData.hubs = [];
+            if(!companyData.flightRoutes) companyData.flightRoutes = [];
+            if(!companyData.routes) companyData.routes = [];
             
             document.getElementById('db-balance').value = companyData.balance || "";
             document.getElementById('db-stock').value = companyData.stock || "";
             document.getElementById('db-fuel').value = companyData.fuel || "";
             document.getElementById('db-co2').value = companyData.co2 || "";
             
-            renderFleetTable();
-            renderAirportsTable();
-            renderRoutesTable(); // Render bảng Quản lý đội bay
+            renderFleetTable(); renderAirportsTable(); renderHubsTable(); renderFlightRoutesTable(); renderRoutesTable();
             setSyncStatus("(Đã đồng bộ)", "#10b981");
-        } catch(e) {
-            setSyncStatus("(Lỗi tải dữ liệu)", "#ef4444");
-        }
+        } catch(e) { setSyncStatus("(Lỗi tải dữ liệu)", "#ef4444"); }
     }
 
     async function saveCompanyData() {
@@ -404,52 +449,66 @@
         // Save Cấu Hình Máy Bay
         let newFleet = [];
         document.querySelectorAll('#fleet-tbody tr').forEach(tr => {
-            let maker = tr.querySelector('.f-maker').value.trim();
-            let model = tr.querySelector('.f-model').value.trim();
+            let maker = tr.querySelector('.f-maker').value.trim(); let model = tr.querySelector('.f-model').value.trim();
             if (maker || model) {
                 newFleet.push({
-                    id: tr.dataset.id, maker: maker, model: model,
-                    range: tr.querySelector('.f-range').value.trim(), maxspeed: tr.querySelector('.f-maxspeed').value.trim(),
-                    pax: tr.querySelector('.f-pax').value.trim(), acheck: tr.querySelector('.f-acheck').value.trim(),
-                    fuelcons: tr.querySelector('.f-fuelcons').value.trim(), co2emis: tr.querySelector('.f-co2emis').value.trim(),
-                    price: tr.querySelector('.f-price').value.trim(), cond: tr.querySelector('.f-cond').value.trim(), speed: tr.querySelector('.f-speed').value.trim()
+                    id: tr.dataset.id, maker: maker, model: model, range: tr.querySelector('.f-range').value.trim(), 
+                    maxspeed: tr.querySelector('.f-maxspeed').value.trim(), pax: tr.querySelector('.f-pax').value.trim(), 
+                    acheck: tr.querySelector('.f-acheck').value.trim(), fuelcons: tr.querySelector('.f-fuelcons').value.trim(), 
+                    co2emis: tr.querySelector('.f-co2emis').value.trim(), price: tr.querySelector('.f-price').value.trim(), 
+                    cond: tr.querySelector('.f-cond').value.trim(), speed: tr.querySelector('.f-speed').value.trim()
                 });
             }
-        });
-        companyData.fleet = newFleet;
+        }); companyData.fleet = newFleet;
 
-        // Save Sân bay
+        // Xử lý lưu Sân bay Global (Tránh trùng lặp)
         let newAirports = [];
         document.querySelectorAll('#airports-tbody tr').forEach(tr => {
-            let name = tr.querySelector('.a-name').value.trim();
-            let icao = tr.querySelector('.a-icao').value.trim();
+            let name = tr.querySelector('.a-name').value.trim(); let icao = tr.querySelector('.a-icao').value.trim();
             if (name || icao) {
                 newAirports.push({
-                    id: tr.dataset.id, country: tr.querySelector('.a-country').value.trim(), name: name, icao: icao, iata: tr.querySelector('.a-iata').value.trim()
+                    id: tr.dataset.id || ('AP_'+Date.now()+Math.random()), country: tr.querySelector('.a-country').value.trim(), 
+                    name: name, icao: icao, iata: tr.querySelector('.a-iata').value.trim()
                 });
             }
         });
-        companyData.airports = newAirports;
+        let airportMap = {};
+        globalAirports.forEach(a => airportMap[a.id] = a);
+        newAirports.forEach(a => {
+            let isDup = Object.values(airportMap).find(g => g.id !== a.id && ((g.icao && g.icao === a.icao) || (g.iata && g.iata === a.iata)));
+            if(!isDup) airportMap[a.id] = a; // Nếu không trùng lặp, lưu mới hoặc cập nhật
+        });
+        globalAirports = Object.values(airportMap);
 
-        // Save Quản lý Đội Bay (Tuyến)
+        // Save Hubs
+        let newHubs = [];
+        document.querySelectorAll('#hubs-tbody tr').forEach(tr => {
+            let name = tr.querySelector('.h-name').value.trim();
+            if (name) {
+                newHubs.push({
+                    id: tr.dataset.id, name: name, code: tr.querySelector('.h-code').value.trim(), base: tr.querySelector('.h-base').checked
+                });
+            }
+        }); companyData.hubs = newHubs;
+
+        // Save Cấu Hình Tuyến Bay
+        let newFRoutes = [];
+        document.querySelectorAll('#flight-routes-tbody tr').forEach(tr => {
+            let hubId = tr.querySelector('.fr-hub').value; let destId = tr.querySelector('.fr-dest').value;
+            if (hubId && destId) { newFRoutes.push({ id: tr.dataset.id, hub: hubId, dest: destId }); }
+        }); companyData.flightRoutes = newFRoutes;
+
+        // Save Quản lý Đội Bay
         let newRoutes = [];
         document.querySelectorAll('#routes-tbody tr').forEach(tr => {
-            let route = tr.querySelector('.r-route').value.trim();
-            let segment = tr.querySelector('.r-segment').value.trim();
-            if (route || segment) {
-                newRoutes.push({
-                    id: tr.dataset.id, route: route, segment: segment
-                });
-            }
-        });
-        companyData.routes = newRoutes;
+            let route = tr.querySelector('.r-route').value.trim(); let segment = tr.querySelector('.r-segment').value.trim();
+            if (route || segment) { newRoutes.push({ id: tr.dataset.id, route: route, segment: segment, aircraft: tr.querySelector('.r-aircraft').value }); }
+        }); companyData.routes = newRoutes;
 
         try {
-            await fetch(getCompanyDataURL(), {
-                method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(companyData)
-            });
-            setSyncStatus("(Đã lưu)", "#10b981");
-            updateDashboardCount();
+            await fetch(getCompanyDataURL(), { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(companyData) });
+            await fetch(DB_BASE_URL + "globalAirports.json", { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(globalAirports) });
+            setSyncStatus("(Đã lưu)", "#10b981"); updateDashboardCount();
         } catch(e) { setSyncStatus("(Lỗi kết nối)", "#ef4444"); }
     }
     function triggerSave() {
@@ -544,17 +603,12 @@
         }
     }
 function renderAirportsTable() {
-        let tbody = document.getElementById('airports-tbody');
-        tbody.innerHTML = '';
-        if(companyData.airports.length === 0) { addAirportRow(); } 
-        else { companyData.airports.forEach(ap => addAirportRow(ap)); }
+        let tbody = document.getElementById('airports-tbody'); tbody.innerHTML = '';
+        if(globalAirports.length === 0) { addAirportRow(); } else { globalAirports.forEach(ap => addAirportRow(ap)); }
     }
-
     function addAirportRow(ap = {id: 'AP_'+Date.now(), country: '', name: '', icao: '', iata: ''}) {
-        let tbody = document.getElementById('airports-tbody');
-        let tr = document.createElement('tr');
-        tr.dataset.id = ap.id || ('AP_'+Date.now());
-        
+        let tbody = document.getElementById('airports-tbody'); let tr = document.createElement('tr');
+        tr.dataset.id = ap.id || ('AP_'+Date.now()+Math.random());
         tr.innerHTML = `
             <td class="a-stt" style="text-align: center; font-weight: bold;"></td>
             <td><input type="text" class="a-country" value="${ap.country || ''}" placeholder="VD: Vietnam" style="width: 100%; box-sizing: border-box;" oninput="triggerSave()"></td>
@@ -563,82 +617,122 @@ function renderAirportsTable() {
             <td><input type="text" class="a-iata" value="${ap.iata || ''}" placeholder="SGN" style="width: 100%; box-sizing: border-box; text-align: center;" oninput="this.value = this.value.toUpperCase(); triggerSave()"></td>
             <td><button class="btn-remove" onclick="removeAirportRow(this)">Xóa</button></td>
         `;
-        tbody.appendChild(tr);
-        updateAirportSTT();
+        tbody.appendChild(tr); document.querySelectorAll('#airports-tbody tr').forEach((r, i) => r.querySelector('.a-stt').innerText = i + 1);
     }
-
     function removeAirportRow(btn) {
-        if(confirm("Chắc chắn muốn xóa dữ liệu sân bay này?")) {
-            btn.closest('tr').remove();
-            updateAirportSTT();
-            triggerSave();
-        }
+        if(confirm("Xóa sân bay này?")) { btn.closest('tr').remove(); triggerSave(); }
     }
 
-    function updateAirportSTT() {
-        document.querySelectorAll('#airports-tbody tr').forEach((tr, i) => tr.querySelector('.a-stt').innerText = i + 1);
+    // --- HUB ---
+    function renderHubsTable() {
+        let tbody = document.getElementById('hubs-tbody'); tbody.innerHTML = '';
+        if(companyData.hubs.length === 0) { addHubRow(); } else { companyData.hubs.forEach(hb => addHubRow(hb)); }
     }
-    function handleRouteCodeInput(inputEle, type) {
-        let prefixLen = type === 'route' ? 2 : 4;
-        let className = type === 'route' ? '.r-route' : '.r-segment';
-        let msg = type === 'route' ? 'Nhập 2 ký tự in hoa cho Mã Tuyến (VD: RO):' : 'Nhập 4 ký tự in hoa cho Mã Chặng (VD: ROVN):';
+    function addHubRow(hb = {id: 'HB_'+Date.now(), name: '', code: '', base: false}) {
+        let tbody = document.getElementById('hubs-tbody'); let tr = document.createElement('tr');
+        tr.dataset.id = hb.id || ('HB_'+Date.now());
+        tr.innerHTML = `
+            <td class="h-stt" style="text-align: center; font-weight: bold;"></td>
+            <td><input type="text" class="h-name" value="${hb.name || ''}" placeholder="Tên HUB..." style="width: 100%; box-sizing: border-box;" oninput="triggerSave()"></td>
+            <td><input type="text" class="h-code" value="${hb.code || ''}" placeholder="ICAO/IATA..." style="width: 100%; box-sizing: border-box; text-align: center;" oninput="triggerSave()"></td>
+            <td><input type="radio" name="base-hub" class="h-base" ${hb.base ? 'checked' : ''} onchange="triggerSave()" style="width:20px; height:20px; cursor:pointer;"></td>
+            <td><button class="btn-remove" onclick="removeHubRow(this)">Xóa</button></td>
+        `;
+        tbody.appendChild(tr); document.querySelectorAll('#hubs-tbody tr').forEach((r, i) => r.querySelector('.h-stt').innerText = i + 1);
+    }
+    function removeHubRow(btn) {
+        if(confirm("Chắc chắn muốn xóa HUB này?")) { btn.closest('tr').remove(); triggerSave(); }
+    }
+
+    // --- TUYẾN BAY (ROUTE NETWORKS) ---
+    function renderFlightRoutesTable() {
+        let tbody = document.getElementById('flight-routes-tbody'); tbody.innerHTML = '';
+        if(companyData.flightRoutes.length === 0) { addFlightRouteRow(); } else { companyData.flightRoutes.forEach(fr => addFlightRouteRow(fr)); }
+    }
+    function addFlightRouteRow(fr = {id: 'FR_'+Date.now(), hub: '', dest: ''}) {
+        let tbody = document.getElementById('flight-routes-tbody'); let tr = document.createElement('tr');
+        tr.dataset.id = fr.id || ('FR_'+Date.now());
         
+        let hubOpts = companyData.hubs.map(h => `<option value="${h.id}" ${fr.hub===h.id ? 'selected':''}>${h.name} (${h.code})</option>`).join('');
+        let destOpts = globalAirports.map(a => `<option value="${a.id}" ${fr.dest===a.id ? 'selected':''}>${a.name} (${a.icao||'---'} / ${a.iata||'---'})</option>`).join('');
+        
+        tr.innerHTML = `
+            <td class="fr-stt" style="text-align: center; font-weight: bold;"></td>
+            <td><select class="fr-hub" onchange="triggerSave()" style="width: 100%; box-sizing: border-box;"><option value="">-- Chọn HUB --</option>${hubOpts}</select></td>
+            <td><select class="fr-dest" onchange="triggerSave()" style="width: 100%; box-sizing: border-box;"><option value="">-- Sân Bay Đến --</option>${destOpts}</select></td>
+            <td><button class="btn-remove" onclick="removeFlightRouteRow(this)">Xóa</button></td>
+        `;
+        tbody.appendChild(tr); document.querySelectorAll('#flight-routes-tbody tr').forEach((r, i) => r.querySelector('.fr-stt').innerText = i + 1);
+    }
+    function removeFlightRouteRow(btn) { if(confirm("Xóa tuyến bay này?")) { btn.closest('tr').remove(); triggerSave(); } }
+
+    // --- QUẢN LÝ ĐỘI BAY (Tuyến & Máy bay) ---
+    function handleRouteCodeInput(inputEle, type) {
+        let prefixLen = type === 'route' ? 2 : 4; let className = type === 'route' ? '.r-route' : '.r-segment';
+        let msg = type === 'route' ? 'Nhập 2 ký tự in hoa cho Mã Tuyến (VD: RO):' : 'Nhập 4 ký tự in hoa cho Mã Chặng (VD: ROVN):';
         let prefix = prompt(msg);
         if(prefix) {
             prefix = prefix.toUpperCase().replace(/[^A-Z]/g, '').substring(0, prefixLen);
             if(prefix.length === prefixLen) {
                 let maxNum = 0;
-                // Tìm giá trị số lớn nhất hiện tại
                 document.querySelectorAll(className).forEach(inp => {
                     if (inp !== inputEle && inp.value.startsWith(prefix + '-')) {
-                        let numPart = parseInt(inp.value.split('-')[1]);
-                        if (!isNaN(numPart) && numPart > maxNum) maxNum = numPart;
+                        let numPart = parseInt(inp.value.split('-')[1]); if (!isNaN(numPart) && numPart > maxNum) maxNum = numPart;
                     }
                 });
-                maxNum++; // Tăng thêm 1
-                inputEle.value = prefix + '-' + maxNum.toString().padStart(3, '0');
-                triggerSave();
-            } else {
-                alert(`Vui lòng nhập đúng ${prefixLen} ký tự chữ cái in hoa!`);
-            }
+                maxNum++; inputEle.value = prefix + '-' + maxNum.toString().padStart(3, '0'); triggerSave();
+            } else { alert(`Vui lòng nhập đúng ${prefixLen} ký tự chữ cái in hoa!`); }
         }
+    }
+
+    // Modal hiển thị thông tin Máy Bay
+    function showAircraftInfo(acId) {
+        if(!acId) return alert("Bạn chưa chọn dòng máy bay cho tuyến này!");
+        let ac = companyData.fleet.find(f => f.id === acId);
+        if(!ac) return alert("Dữ liệu máy bay không còn tồn tại!");
+        
+        let html = `
+            <div style="display:flex; justify-content:space-between;"><b>Hãng sản xuất:</b> <span style="color:#0284c7; font-weight:bold;">${ac.maker || '---'}</span></div>
+            <div style="display:flex; justify-content:space-between;"><b>Dòng máy bay:</b> <span style="color:#0284c7; font-weight:bold;">${ac.model || '---'}</span></div><hr>
+            <div style="display:flex; justify-content:space-between;"><b>Tầm bay (Range):</b> <span>${ac.range || 0} km</span></div>
+            <div style="display:flex; justify-content:space-between;"><b>Tốc độ tối đa:</b> <span>${ac.maxspeed || 0} km/h</span></div>
+            <div style="display:flex; justify-content:space-between;"><b>Tốc độ bay TT:</b> <span>${ac.speed || 0} km/h</span></div>
+            <div style="display:flex; justify-content:space-between;"><b>Sức chứa (Pax):</b> <span>${ac.pax || 0} Hành khách</span></div><hr>
+            <div style="display:flex; justify-content:space-between;"><b>Tiêu hao nhiên liệu:</b> <span style="color:#ef4444;">${ac.fuelcons || 0} Lbs/km</span></div>
+            <div style="display:flex; justify-content:space-between;"><b>Phát thải CO2:</b> <span style="color:#ef4444;">${ac.co2emis || 0} kg/km</span></div>
+            <div style="display:flex; justify-content:space-between;"><b>Độ mài mòn (Cond):</b> <span style="font-weight:bold; color:${parseInt(ac.cond) < 50 ? '#ef4444' : '#10b981'}">${ac.cond || 100}%</span></div><hr>
+            <div style="display:flex; justify-content:space-between;"><b>Giá mua (Market):</b> <span style="color:#10b981; font-weight:bold;">${ac.price || 0} $</span></div>
+            <div style="display:flex; justify-content:space-between;"><b>Chi phí A-Check:</b> <span>${ac.acheck || 0} $</span></div>
+        `;
+        document.getElementById('modal-content').innerHTML = html;
+        document.getElementById('ac-modal').style.display = 'flex';
     }
 
     function renderRoutesTable() {
-        let tbody = document.getElementById('routes-tbody');
-        tbody.innerHTML = '';
-        if(companyData.routes.length === 0) { addRouteRow(); } 
-        else { companyData.routes.forEach(rt => addRouteRow(rt)); }
+        let tbody = document.getElementById('routes-tbody'); tbody.innerHTML = '';
+        if(companyData.routes.length === 0) { addRouteRow(); } else { companyData.routes.forEach(rt => addRouteRow(rt)); }
     }
-
-    function addRouteRow(rt = {id: 'RT_'+Date.now(), route: '', segment: ''}) {
-        let tbody = document.getElementById('routes-tbody');
-        let tr = document.createElement('tr');
+    function addRouteRow(rt = {id: 'RT_'+Date.now(), route: '', segment: '', aircraft: ''}) {
+        let tbody = document.getElementById('routes-tbody'); let tr = document.createElement('tr');
         tr.dataset.id = rt.id || ('RT_'+Date.now());
         
-        // Khi bấm vào ô input, nó sẽ kích hoạt bảng (prompt) để nhập mã
+        let acOpts = companyData.fleet.map(f => `<option value="${f.id}" ${rt.aircraft === f.id ? 'selected' : ''}>[${f.cond}%] ${f.maker} ${f.model}</option>`).join('');
+
         tr.innerHTML = `
             <td class="r-stt" style="text-align: center; font-weight: bold;"></td>
-            <td><input type="text" class="r-route" value="${rt.route || ''}" readonly onclick="handleRouteCodeInput(this, 'route')" placeholder="Bấm vào đây để tạo Mã Tuyến..." style="width: 100%; box-sizing: border-box; text-align: center; cursor: pointer; background: #f8fafc; border: 2px dashed #94a3b8; font-weight: bold; color: #0284c7;"></td>
-            <td><input type="text" class="r-segment" value="${rt.segment || ''}" readonly onclick="handleRouteCodeInput(this, 'segment')" placeholder="Bấm vào đây để tạo Mã Chặng..." style="width: 100%; box-sizing: border-box; text-align: center; cursor: pointer; background: #f8fafc; border: 2px dashed #94a3b8; font-weight: bold; color: #10b981;"></td>
+            <td><input type="text" class="r-route" value="${rt.route || ''}" readonly onclick="handleRouteCodeInput(this, 'route')" placeholder="Nhấn tạo Tuyến..." style="width: 100%; box-sizing: border-box; text-align: center; cursor: pointer; background: #f8fafc; border: 2px dashed #94a3b8; font-weight: bold; color: #0284c7;"></td>
+            <td><input type="text" class="r-segment" value="${rt.segment || ''}" readonly onclick="handleRouteCodeInput(this, 'segment')" placeholder="Nhấn tạo Chặng..." style="width: 100%; box-sizing: border-box; text-align: center; cursor: pointer; background: #f8fafc; border: 2px dashed #94a3b8; font-weight: bold; color: #10b981;"></td>
+            <td>
+                <div style="display:flex; gap:8px;">
+                    <select class="r-aircraft" onchange="triggerSave()" style="flex:1;"><option value="">-- Chọn --</option>${acOpts}</select>
+                    <button class="btn-main" style="padding: 6px 12px; background: #3b82f6;" onclick="showAircraftInfo(this.previousElementSibling.value)">🔍 Xem</button>
+                </div>
+            </td>
             <td><button class="btn-remove" onclick="removeRouteRow(this)">Xóa</button></td>
         `;
-        tbody.appendChild(tr);
-        updateRouteSTT();
+        tbody.appendChild(tr); document.querySelectorAll('#routes-tbody tr').forEach((r, i) => r.querySelector('.r-stt').innerText = i + 1);
     }
-
-    function removeRouteRow(btn) {
-        if(confirm("Chắc chắn muốn xóa dữ liệu tuyến bay này?")) {
-            btn.closest('tr').remove();
-            updateRouteSTT();
-            triggerSave();
-        }
-    }
-
-    function updateRouteSTT() {
-        document.querySelectorAll('#routes-tbody tr').forEach((tr, i) => tr.querySelector('.r-stt').innerText = i + 1);
-    }
-    // Khởi động
+    function removeRouteRow(btn) { if(confirm("Chắc chắn muốn xóa phân công chuyến bay này?")) { btn.closest('tr').remove(); triggerSave(); } }
     loadAuth();
 </script>
 </body>
