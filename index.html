@@ -148,11 +148,14 @@
                 <button class="menu-btn" onclick="toggleMenu()">☰</button>
                 <div id="myDropdown" class="dropdown-content">
                     <a onclick="switchModule('module-dashboard')">📊 Bảng Tổng Quan</a>
-                    <a onclick="switchModule('module-fleet')">⚙️ Thông Tin Cấu Hình Máy Bay</a>
-                    <a onclick="switchModule('module-hubs')">🏢 Quản Lý HUB</a>
+                    <a onclick="switchModule('module-prices')">💰 Bảng Giá Hệ Thống</a>
                     <a onclick="switchModule('module-airports')">🌍 Quản Lý Sân Bay (Global)</a>
+                    <a onclick="switchModule('module-hubs')">🏢 Quản Lý HUB</a>
                     <a onclick="switchModule('module-flight-routes')">🗺️ Cấu Hình Tuyến Bay</a>
-                    <a onclick="switchModule('module-routes')">✈️ Quản Lý Đội Bay</a>
+                    <a onclick="switchModule('module-demands')">📈 Nhu Cầu & Khoảng Cách</a>
+                    <a onclick="switchModule('module-fleet')">⚙️ Thông Tin Cấu Hình Máy Bay</a>
+                    <a onclick="switchModule('module-routes')">✈️ Phân Công Đội Bay</a>
+                    <a onclick="switchModule('module-takeoff')">🛫 Quản Lý Cất Cánh</a>
                     <a onclick="switchModule('module-maintenance')">🔧 Lịch Bảo Trì (A/C Checks)</a>
                     <a onclick="handleLogout()" style="color:#ef4444; border-top: 1px solid #e2e8f0; font-weight: bold;">🚪 Đăng Xuất</a>
                 </div>
@@ -188,126 +191,82 @@
                 <p style="color: #64748b; font-weight: bold;">TỔNG SỐ TÀU BAY ĐANG KHAI THÁC</p>
             </div>
         </div>
-<div id="module-airports" class="module">
+<div id="module-prices" class="module">
+            <h2 class="module-title">Bảng Giá Hệ Thống</h2>
+            <div class="form-group"><label>Giá Nhiên liệu ($/1000 Lbs):</label><input type="text" id="price-fuel" value="0" oninput="formatCurrency(this); triggerSave()"></div>
+            <div class="form-group"><label>Giá CO2 Quota ($/1000 kg):</label><input type="text" id="price-co2" value="0" oninput="formatCurrency(this); triggerSave()"></div>
+            <div class="form-group"><label>Giá Vé Hạng Y ($):</label><input type="text" id="price-y" value="0" oninput="formatCurrency(this); triggerSave()"></div>
+            <div class="form-group"><label>Giá Vé Hạng J ($):</label><input type="text" id="price-j" value="0" oninput="formatCurrency(this); triggerSave()"></div>
+            <div class="form-group"><label>Giá Vé Hạng F ($):</label><input type="text" id="price-f" value="0" oninput="formatCurrency(this); triggerSave()"></div>
+        </div>
+
+        <div id="module-airports" class="module">
             <h2 class="module-title">Danh Sách Sân Bay (Global)</h2>
-            <p style="text-align: center; color: #64748b; font-style: italic;">Dữ liệu chia sẻ chung. Bất kỳ ai nhập cũng sẽ được lưu lên hệ thống toàn cầu.</p>
             <div style="text-align: right; margin-bottom: 15px;">
+                <button class="btn-main" style="background:#8b5cf6; margin-right:10px;" onclick="openCountryManager()">Quản Lý Quốc Gia</button>
                 <button class="btn-add" onclick="addAirportRow()">+ Thêm Sân Bay Mới</button>
             </div>
-            <div style="overflow-x: auto;">
-                <table style="min-width: 800px;">
-                    <thead>
-                        <tr>
-                            <th style="width: 5%;">STT</th>
-                            <th style="width: 25%;">Quốc gia</th>
-                            <th style="width: 35%;">Tên sân bay</th>
-                            <th style="width: 12%;">Mã ICAO</th>
-                            <th style="width: 12%;">Mã IATA</th>
-                            <th style="width: 11%;">Thao Tác</th>
-                        </tr>
-                    </thead>
-                    <tbody id="airports-tbody"></tbody>
-                </table>
-            </div>
+            <div style="overflow-x: auto;"><table style="min-width: 800px;">
+                <thead><tr><th style="width: 5%;">STT</th><th style="width: 25%;">Quốc gia</th><th style="width: 35%;">Tên sân bay</th><th style="width: 12%;">Mã ICAO</th><th style="width: 12%;">Mã IATA</th><th style="width: 11%;">Thao Tác</th></tr></thead>
+                <tbody id="airports-tbody"></tbody>
+            </table></div>
         </div>
 
         <div id="module-hubs" class="module">
             <h2 class="module-title">Quản Lý HUB (Căn Cứ Của Hãng)</h2>
-            <div style="text-align: right; margin-bottom: 15px;">
-                <button class="btn-add" onclick="addHubRow()">+ Thêm HUB Mới</button>
-            </div>
-            <div style="overflow-x: auto;">
-                <table style="min-width: 800px;">
-                    <thead>
-                        <tr>
-                            <th style="width: 5%;">STT</th>
-                            <th style="width: 25%;">Tên HUB</th>
-                            <th style="width: 25%;">Quốc gia (Tên/Mã)</th>
-                            <th style="width: 20%;">Mã ICAO/IATA</th>
-                            <th style="width: 10%;">Chọn Base</th>
-                            <th style="width: 15%;">Thao Tác</th>
-                        </tr>
-                    </thead>
-                    <tbody id="hubs-tbody"></tbody>
-                </table>
-            </div>
+            <div style="text-align: right; margin-bottom: 15px;"><button class="btn-add" onclick="addHubRow()">+ Thêm HUB Mới</button></div>
+            <div style="overflow-x: auto;"><table style="min-width: 800px;">
+                <thead><tr><th style="width: 5%;">STT</th><th style="width: 30%;">Chọn Sân Bay (Từ Global)</th><th style="width: 25%;">Quốc gia (Tên/Mã)</th><th style="width: 15%;">Mã ICAO/IATA</th><th style="width: 10%;">Base</th><th style="width: 15%;">Thao Tác</th></tr></thead>
+                <tbody id="hubs-tbody"></tbody>
+            </table></div>
         </div>
 
         <div id="module-flight-routes" class="module">
-            <h2 class="module-title">Danh Sách Tuyến Bay (Route Networks)</h2>
-            <div style="text-align: right; margin-bottom: 15px;">
-                <button class="btn-add" onclick="addFlightRouteRow()">+ Thêm Tuyến Mới</button>
-            </div>
-            <div style="overflow-x: auto;">
-                <table style="min-width: 800px;">
-                    <thead>
-                        <tr>
-                            <th style="width: 5%;">STT</th>
-                            <th style="width: 40%;">Sân bay xuất phát (Từ HUB)</th>
-                            <th style="width: 40%;">Sân bay đến (Từ Global)</th>
-                            <th style="width: 15%;">Thao Tác</th>
-                        </tr>
-                    </thead>
-                    <tbody id="flight-routes-tbody"></tbody>
-                </table>
-            </div>
+            <h2 class="module-title">Cấu Hình Tuyến Bay</h2>
+            <div style="text-align: right; margin-bottom: 15px;"><button class="btn-add" onclick="addFlightRouteRow()">+ Thêm Tuyến Mới</button></div>
+            <div style="overflow-x: auto;"><table style="min-width: 800px;">
+                <thead><tr><th style="width: 5%;">STT</th><th style="width: 35%;">Sân bay xuất phát (Từ HUB)</th><th style="width: 35%;">Sân bay đến (Từ Global)</th><th style="width: 25%;">Thao Tác</th></tr></thead>
+                <tbody id="flight-routes-tbody"></tbody>
+            </table></div>
         </div>
 
-        <div id="module-routes" class="module">
-            <h2 class="module-title">Quản Lý Đội Bay (Phân Công Tàu Bay)</h2>
-            <div style="text-align: right; margin-bottom: 15px;">
-                <button class="btn-add" onclick="addRouteRow()">+ Phân Công Đội Bay</button>
-            </div>
-            <div style="overflow-x: auto;">
-                <table style="min-width: 1000px;">
-                    <thead>
-                        <tr>
-                            <th style="width: 5%;">STT</th>
-                            <th style="width: 15%;">Chặng Bay (Tự Động)</th>
-                            <th style="width: 20%;">Mã Tuyến bay</th>
-                            <th style="width: 20%;">Mã chặng bay</th>
-                            <th style="width: 30%;">Chọn Dòng Máy Bay</th>
-                            <th style="width: 10%;">Thao Tác</th>
-                        </tr>
-                    </thead>
-                    <tbody id="routes-tbody"></tbody>
-                </table>
-            </div>
+        <div id="module-demands" class="module">
+            <h2 class="module-title">Nhu Cầu Hành Khách & Khoảng Cách</h2>
+            <p style="text-align:center; color:#64748b;">(Danh sách tự động cập nhật từ Cấu Hình Tuyến Bay)</p>
+            <div style="overflow-x: auto;"><table style="min-width: 900px;">
+                <thead><tr><th>STT</th><th>Chặng Bay</th><th>Khoảng Cách (km)</th><th>Nhu Cầu Y</th><th>Nhu Cầu J</th><th>Nhu Cầu F</th></tr></thead>
+                <tbody id="demands-tbody"></tbody>
+            </table></div>
         </div>
 
         <div id="module-fleet" class="module">
             <h2 class="module-title">Thông Tin Cấu Hình Máy Bay</h2>
-            <div style="text-align: right; margin-bottom: 15px;">
-                <button class="btn-add" onclick="addFleetRow()">+ Nhập Máy Bay Mới</button>
-            </div>
-            <div style="overflow-x: auto;">
-                <table style="min-width: 1600px;">
-                    <thead>
-                        <tr>
-                            <th style="width: 4%;">STT</th>
-                            <th style="width: 10%; cursor: pointer; color: #0284c7; text-decoration: underline;" onclick="openMakersManager()" title="Bấm để quản lý Hãng">Hãng máy bay ⚙️</th>
-                            <th style="width: 10%;">Dòng máy bay</th>
-                            <th style="width: 8%;">Khoảng cách tối đa (km)</th>
-                            <th style="width: 8%;">Vận tốc tối đa (km/h)</th>
-                            <th style="width: 7%;">Số HK (Hạng Y)</th>
-                            <th style="width: 10%;">Phi hành đoàn</th>
-                            <th style="width: 9%;">Giá tiền A-check ($)</th>
-                            <th style="width: 8%;">Maint check (Giờ)</th>
-                            <th style="width: 8%;">Tiêu hao NL (Lbs/km)</th>
-                            <th style="width: 8%;">Phát thải CO2 (kg/km)</th>
-                            <th style="width: 8%;">Giá mua ($)</th>
-                            <th style="width: 7%;">Vận tốc bay (km/h)</th>
-                            <th style="width: 5%;">Thao Tác</th>
-                        </tr>
-                    </thead>
-                    <tbody id="fleet-tbody"></tbody>
-                </table>
-            </div>
+            <div style="text-align: right; margin-bottom: 15px;"><button class="btn-add" onclick="addFleetRow()">+ Nhập Máy Bay Mới</button></div>
+            <div style="overflow-x: auto;"><table style="min-width: 1600px;">
+                <thead><tr><th style="width:4%;">STT</th><th style="width:10%; cursor:pointer; color:#0284c7; text-decoration:underline;" onclick="openMakersManager()">Hãng máy bay ⚙️</th><th style="width:10%;">Dòng máy bay</th><th style="width:8%;">Khoảng cách TĐ</th><th style="width:8%;">Vận tốc TĐ</th><th style="width:7%;">Số HK (Y)</th><th style="width:10%;">Phi hành đoàn</th><th style="width:9%;">A-check ($)</th><th style="width:8%;">Maint (Giờ)</th><th style="width:8%;">Tiêu hao NL</th><th style="width:8%;">Phát thải CO2</th><th style="width:8%;">Giá mua ($)</th><th style="width:7%;">Vận tốc bay</th><th style="width:5%;">Thao Tác</th></tr></thead>
+                <tbody id="fleet-tbody"></tbody>
+            </table></div>
+        </div>
+
+        <div id="module-routes" class="module">
+            <h2 class="module-title">Quản Lý Đội Bay (Phân Công)</h2>
+            <div style="text-align: right; margin-bottom: 15px;"><button class="btn-add" onclick="addRouteRow()">+ Phân Công Đội Bay</button></div>
+            <div style="overflow-x: auto;"><table style="min-width: 1000px;">
+                <thead><tr><th>STT</th><th>Chặng Bay</th><th>Mã Tuyến bay</th><th>Mã chặng bay</th><th>Chọn Dòng Máy Bay</th><th>Thao Tác</th></tr></thead>
+                <tbody id="routes-tbody"></tbody>
+            </table></div>
+        </div>
+
+        <div id="module-takeoff" class="module">
+            <h2 class="module-title">Lịch Trình Cất Cánh</h2>
+            <div style="overflow-x: auto;"><table style="min-width: 800px;">
+                <thead><tr><th>STT</th><th>Chọn</th><th>Mã Chặng Bay</th><th>Tàu Bay</th><th>Thao Tác</th></tr></thead>
+                <tbody id="takeoff-tbody"></tbody>
+            </table></div>
         </div>
 
         <div id="common-modal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(15, 23, 42, 0.7); z-index:99999; align-items:center; justify-content:center;">
-            <div id="common-modal-content" style="background:#fff; padding:30px; border-radius:12px; min-width:350px; max-width:600px; max-height:80vh; overflow-y:auto; box-shadow: 0 25px 50px rgba(0,0,0,0.3);">
-                </div>
+            <div id="common-modal-content" style="background:#fff; padding:30px; border-radius:12px; min-width:400px; max-width:700px; max-height:85vh; overflow-y:auto; box-shadow: 0 25px 50px rgba(0,0,0,0.3);"></div>
         </div>
 <script>
     /* =========================================================================
@@ -320,187 +279,109 @@
     let systemUsers = {};
    let companyData = {
         balance: "", stock: "", fuel: "", co2: "",
-        fleet: [], hubs: [], flightRoutes: [], routes: [], makers: []
+        fleet: [], hubs: [], flightRoutes: [], routes: [], makers: [],
+        countries: [], demands: [], prices: { fuel: "0", co2: "0", y: "0", j: "0", f: "0" }, history: []
     };
-    let globalAirports = []; // Lưu trữ sân bay toàn cầu
-    let saveTimer = null;
-    let currentActiveInput = null; // Biến tạm phục vụ Modal
-    let currentActiveRowId = null;
+    let globalAirports = []; let saveTimer = null;
+    let currentActiveInput = null; let currentActiveRowId = null;
 
-    async function loadAuth() {
-        try {
-            let res = await fetch(AUTH_URL);
-            if (res.ok) { let data = await res.json(); if (data) systemUsers = data; }
-        } catch(e) { console.error("Auth Load Error", e); }
-    }
-
-    async function saveAuth() {
-        await fetch(AUTH_URL, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(systemUsers) });
-    }
-
-    function switchAuth(type) {
-        document.getElementById('login-box').style.display = type === 'login' ? 'block' : 'none';
-        document.getElementById('register-box').style.display = type === 'register' ? 'block' : 'none';
-    }
+    async function loadAuth() { try { let res = await fetch(AUTH_URL); if (res.ok) { let data = await res.json(); if (data) systemUsers = data; } } catch(e) {} }
+    async function saveAuth() { await fetch(AUTH_URL, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(systemUsers) }); }
+    function switchAuth(type) { document.getElementById('login-box').style.display = type === 'login' ? 'block' : 'none'; document.getElementById('register-box').style.display = type === 'register' ? 'block' : 'none'; }
 
     async function handleRegister() {
-        let name = document.getElementById('reg-name').value.trim();
-        let phone = document.getElementById('reg-phone').value.trim();
-        let pass = document.getElementById('reg-pass').value;
-
-        if (!name || !phone || !pass) return alert("Vui lòng nhập đủ thông tin!");
-        if (systemUsers[phone]) return alert("Tài khoản đã tồn tại!");
-
-        systemUsers[phone] = { name: name, password: pass };
-        await saveAuth(); alert("Thành lập hãng thành công! Vui lòng đăng nhập."); switchAuth('login'); document.getElementById('login-phone').value = phone;
+        let name = document.getElementById('reg-name').value.trim(); let phone = document.getElementById('reg-phone').value.trim(); let pass = document.getElementById('reg-pass').value;
+        if (!name || !phone || !pass) return alert("Vui lòng nhập đủ thông tin!"); if (systemUsers[phone]) return alert("Tài khoản đã tồn tại!");
+        systemUsers[phone] = { name: name, password: pass }; await saveAuth(); alert("Thành lập hãng thành công! Vui lòng đăng nhập."); switchAuth('login'); document.getElementById('login-phone').value = phone;
     }
-
     async function handleLogin() {
-        let phone = document.getElementById('login-phone').value.trim();
-        let pass = document.getElementById('login-pass').value;
-
-        if (!phone || !pass) return alert("Vui lòng nhập ID và Mật khẩu!");
-        if (!systemUsers[phone] || systemUsers[phone].password !== pass) return alert("Sai tài khoản hoặc mật khẩu!");
-
-        activePhone = phone; document.getElementById('auth-screen').style.display = 'none';
-        document.getElementById('main-app').style.display = 'block';
-        document.getElementById('user-display-name').innerText = `CEO: ${systemUsers[phone].name}`;
-        
-        await loadCompanyData();
+        let phone = document.getElementById('login-phone').value.trim(); let pass = document.getElementById('login-pass').value;
+        if (!phone || !pass) return alert("Vui lòng nhập ID và Mật khẩu!"); if (!systemUsers[phone] || systemUsers[phone].password !== pass) return alert("Sai tài khoản hoặc mật khẩu!");
+        activePhone = phone; document.getElementById('auth-screen').style.display = 'none'; document.getElementById('main-app').style.display = 'block';
+        document.getElementById('user-display-name').innerText = `CEO: ${systemUsers[phone].name}`; await loadCompanyData();
     }
-
     function handleLogout() {
-        if(confirm("Xác nhận đăng xuất khỏi hệ thống?")) {
-            activePhone = null; companyData = { balance: "", stock: "", fuel: "", co2: "", fleet: [], hubs: [], flightRoutes: [], routes: [] };
-            document.getElementById('auth-screen').style.display = 'flex';
-            document.getElementById('main-app').style.display = 'none'; document.getElementById('login-pass').value = '';
-        }
+        if(confirm("Xác nhận đăng xuất?")) { activePhone = null; document.getElementById('auth-screen').style.display = 'flex'; document.getElementById('main-app').style.display = 'none'; document.getElementById('login-pass').value = ''; }
     }
-
     function toggleMenu() { document.getElementById("myDropdown").classList.toggle("show"); }
-    window.onclick = function(e) {
-        if (!e.target.matches('.menu-btn')) {
-            let dd = document.getElementsByClassName("dropdown-content");
-            for (let i=0; i<dd.length; i++) if (dd[i].classList.contains('show')) dd[i].classList.remove('show');
-        }
-    }
+    window.onclick = function(e) { if (!e.target.matches('.menu-btn')) { let dd = document.getElementsByClassName("dropdown-content"); for (let i=0; i<dd.length; i++) if (dd[i].classList.contains('show')) dd[i].classList.remove('show'); } }
 
     function switchModule(modId) {
-        let mods = document.getElementsByClassName("module");
-        for (let i=0; i<mods.length; i++) mods[i].classList.remove("active");
+        let mods = document.getElementsByClassName("module"); for (let i=0; i<mods.length; i++) mods[i].classList.remove("active");
         document.getElementById(modId).classList.add("active");
-        
-        // Tự động re-render các bảng phụ thuộc để lấy dữ liệu mới nhất (Dropdowns)
-        if(modId === 'module-maintenance') renderMaintenance();
-        if(modId === 'module-flight-routes') renderFlightRoutesTable();
-        if(modId === 'module-routes') renderRoutesTable();
+        if(modId === 'module-demands') renderDemandsTable(); if(modId === 'module-flight-routes') renderFlightRoutesTable();
+        if(modId === 'module-routes') renderRoutesTable(); if(modId === 'module-takeoff') renderTakeoffTable();
+        if(modId === 'module-prices') {
+            document.getElementById('price-fuel').value = companyData.prices?.fuel || "0"; document.getElementById('price-co2').value = companyData.prices?.co2 || "0";
+            document.getElementById('price-y').value = companyData.prices?.y || "0"; document.getElementById('price-j').value = companyData.prices?.j || "0"; document.getElementById('price-f').value = companyData.prices?.f || "0";
+        }
     }
-
-    function formatCurrency(input) {
-        let val = input.value.replace(/\D/g, '');
-        input.value = val !== '' ? parseInt(val, 10).toLocaleString('en-US') : '';
-    }
-
-    /* =========================================================================
-       DATA SYNC & QUẢN LÝ ĐỘI BAY (AM4 LOGIC)
-       ========================================================================= */
-    function setSyncStatus(msg, color) {
-        let st = document.getElementById('save-status');
-        st.innerText = msg; st.style.color = color;
-    }
-
+    function formatCurrency(input) { let val = input.value.replace(/\D/g, ''); input.value = val !== '' ? parseInt(val, 10).toLocaleString('en-US') : ''; }
+    function setSyncStatus(msg, color) { let st = document.getElementById('save-status'); st.innerText = msg; st.style.color = color; }
     function getCompanyDataURL() { return DB_BASE_URL + "companyData/" + activePhone + ".json"; }
 
     async function loadCompanyData() {
         setSyncStatus("(Đang tải...)", "#f59e0b");
         try {
-            let resGlobal = await fetch(DB_BASE_URL + "globalAirports.json");
-            if (resGlobal.ok) { let dataG = await resGlobal.json(); if(dataG) globalAirports = dataG; }
-
-            let res = await fetch(getCompanyDataURL());
-            if (res.ok) { let data = await res.json(); if (data) companyData = Object.assign(companyData, data); }
+            let resGlobal = await fetch(DB_BASE_URL + "globalAirports.json"); if (resGlobal.ok) { let dataG = await resGlobal.json(); if(dataG) globalAirports = dataG; }
+            let res = await fetch(getCompanyDataURL()); if (res.ok) { let data = await res.json(); if (data) companyData = Object.assign(companyData, data); }
             
-            if(!companyData.fleet) companyData.fleet = []; if(!companyData.hubs) companyData.hubs = [];
-            if(!companyData.flightRoutes) companyData.flightRoutes = []; if(!companyData.routes) companyData.routes = [];
-            if(!companyData.makers) companyData.makers = [];
+            if(!companyData.fleet) companyData.fleet = []; if(!companyData.hubs) companyData.hubs = []; if(!companyData.flightRoutes) companyData.flightRoutes = [];
+            if(!companyData.routes) companyData.routes = []; if(!companyData.makers) companyData.makers = []; if(!companyData.countries) companyData.countries = [];
+            if(!companyData.demands) companyData.demands = []; if(!companyData.history) companyData.history = []; if(!companyData.prices) companyData.prices = {fuel:"0",co2:"0",y:"0",j:"0",f:"0"};
             
-            document.getElementById('db-balance').value = companyData.balance || "";
-            document.getElementById('db-stock').value = companyData.stock || "";
-            document.getElementById('db-fuel').value = companyData.fuel || "";
-            document.getElementById('db-co2').value = companyData.co2 || "";
-            
+            document.getElementById('db-balance').value = companyData.balance || ""; document.getElementById('db-stock').value = companyData.stock || "";
+            document.getElementById('db-fuel').value = companyData.fuel || ""; document.getElementById('db-co2').value = companyData.co2 || "";
             renderFleetTable(); renderAirportsTable(); renderHubsTable(); renderFlightRoutesTable(); renderRoutesTable();
             setSyncStatus("(Đã đồng bộ)", "#10b981");
         } catch(e) { setSyncStatus("(Lỗi tải dữ liệu)", "#ef4444"); }
     }
 
     async function saveCompanyData() {
-        if(!activePhone) return;
-        setSyncStatus("(Đang lưu...)", "#f59e0b");
-        
+        if(!activePhone) return; setSyncStatus("(Đang lưu...)", "#f59e0b");
         companyData.balance = document.getElementById('db-balance').value; companyData.stock = document.getElementById('db-stock').value;
         companyData.fuel = document.getElementById('db-fuel').value; companyData.co2 = document.getElementById('db-co2').value;
         
-        // Save Cấu Hình Máy Bay (Thêm logic lấy data Phi hành đoàn)
+        companyData.prices = {
+            fuel: document.getElementById('price-fuel')?.value||"0", co2: document.getElementById('price-co2')?.value||"0",
+            y: document.getElementById('price-y')?.value||"0", j: document.getElementById('price-j')?.value||"0", f: document.getElementById('price-f')?.value||"0"
+        };
+
         let newFleet = [];
         document.querySelectorAll('#fleet-tbody tr').forEach(tr => {
             let maker = tr.querySelector('.f-maker').value; let model = tr.querySelector('.f-model').value.trim();
             if (maker || model) {
-                newFleet.push({
-                    id: tr.dataset.id, maker: maker, model: model, range: tr.querySelector('.f-range').value.trim(), 
-                    maxspeed: tr.querySelector('.f-maxspeed').value.trim(), pax: tr.querySelector('.f-pax').value.trim(), 
-                    crew_str: tr.querySelector('.f-crew').value, crew_data: JSON.parse(tr.querySelector('.f-crew-data').value || '{}'),
-                    acheck: tr.querySelector('.f-acheck').value.trim(), maintcheck: tr.querySelector('.f-maintcheck').value.trim(), 
-                    fuelcons: tr.querySelector('.f-fuelcons').value.trim(), co2emis: tr.querySelector('.f-co2emis').value.trim(), 
-                    price: tr.querySelector('.f-price').value.trim(), speed: tr.querySelector('.f-speed').value.trim()
-                });
+                newFleet.push({ id: tr.dataset.id, maker: maker, model: model, range: tr.querySelector('.f-range').value.trim(), maxspeed: tr.querySelector('.f-maxspeed').value.trim(), pax: tr.querySelector('.f-pax').value.trim(), crew_str: tr.querySelector('.f-crew').value, crew_data: JSON.parse(tr.querySelector('.f-crew-data').value || '{}'), acheck: tr.querySelector('.f-acheck').value.trim(), maintcheck: tr.querySelector('.f-maintcheck').value.trim(), fuelcons: tr.querySelector('.f-fuelcons').value.trim(), co2emis: tr.querySelector('.f-co2emis').value.trim(), price: tr.querySelector('.f-price').value.trim(), speed: tr.querySelector('.f-speed').value.trim() });
             }
         }); companyData.fleet = newFleet;
 
-        // Xử lý Global Airports
         let newAirports = [];
         document.querySelectorAll('#airports-tbody tr').forEach(tr => {
             let name = tr.querySelector('.a-name').value.trim(); let icao = tr.querySelector('.a-icao').value.trim();
-            if (name || icao) {
-                newAirports.push({
-                    id: tr.dataset.id || ('AP_'+Date.now()+Math.random()), country: tr.querySelector('.a-country').value.trim(), 
-                    name: name, icao: icao, iata: tr.querySelector('.a-iata').value.trim()
-                });
-            }
+            if (name || icao) { newAirports.push({ id: tr.dataset.id || ('AP_'+Date.now()+Math.random()), countryId: tr.querySelector('.a-country').value, name: name, icao: icao, iata: tr.querySelector('.a-iata').value.trim() }); }
         });
         let airportMap = {}; globalAirports.forEach(a => airportMap[a.id] = a);
-        newAirports.forEach(a => {
-            let isDup = Object.values(airportMap).find(g => g.id !== a.id && ((g.icao && g.icao === a.icao) || (g.iata && g.iata === a.iata)));
-            if(!isDup) airportMap[a.id] = a; 
-        }); globalAirports = Object.values(airportMap);
+        newAirports.forEach(a => { let isDup = Object.values(airportMap).find(g => g.id !== a.id && ((g.icao && g.icao === a.icao) || (g.iata && g.iata === a.iata))); if(!isDup) airportMap[a.id] = a; }); globalAirports = Object.values(airportMap);
 
-        // Save Hubs
         let newHubs = [];
         document.querySelectorAll('#hubs-tbody tr').forEach(tr => {
-            let name = tr.querySelector('.h-name').value.trim();
-            if (name) {
-                // Đảm bảo chỉ 1 base được check
-                let isBase = tr.querySelector('.h-base').checked;
-                newHubs.push({
-                    id: tr.dataset.id, name: name, country: tr.querySelector('.h-country').value.trim(), code: tr.querySelector('.h-code').value.trim(), base: isBase
-                });
-            }
+            let apId = tr.querySelector('.h-airport').value; if (apId) { newHubs.push({ id: tr.dataset.id, airportId: apId, base: tr.querySelector('.h-base').checked }); }
         }); companyData.hubs = newHubs;
 
-        // Save Cấu Hình Tuyến Bay
         let newFRoutes = [];
         document.querySelectorAll('#flight-routes-tbody tr').forEach(tr => {
-            let hubId = tr.querySelector('.fr-hub').value; let destId = tr.querySelector('.fr-dest').value;
-            if (hubId && destId) { newFRoutes.push({ id: tr.dataset.id, hub: hubId, dest: destId }); }
+            let hubId = tr.querySelector('.fr-hub').value; let destId = tr.querySelector('.fr-dest').value; if (hubId && destId) { newFRoutes.push({ id: tr.dataset.id, hub: hubId, dest: destId }); }
         }); companyData.flightRoutes = newFRoutes;
 
-        // Save Quản lý Đội Bay
+        let newDemands = [];
+        document.querySelectorAll('#demands-tbody tr').forEach(tr => {
+            newDemands.push({ frId: tr.dataset.frid, distance: tr.querySelector('.d-dist').value, y: tr.querySelector('.d-y').value, j: tr.querySelector('.d-j').value, f: tr.querySelector('.d-f').value });
+        }); companyData.demands = newDemands;
+
         let newRoutes = [];
         document.querySelectorAll('#routes-tbody tr').forEach(tr => {
             let route = tr.querySelector('.r-route').value.trim(); let segment = tr.querySelector('.r-segment').value.trim();
-            let flightRouteId = tr.querySelector('.r-froute-id').value;
-            // config vẫn giữ nguyên trong route object nếu có sửa đổi từ modal
-            let existRoute = companyData.routes.find(r => r.id === tr.dataset.id);
+            let flightRouteId = tr.querySelector('.r-froute-id').value; let existRoute = companyData.routes.find(r => r.id === tr.dataset.id);
             if (route || segment) { newRoutes.push({ id: tr.dataset.id, fRouteId: flightRouteId, route: route, segment: segment, aircraft: tr.querySelector('.r-aircraft').value, config: existRoute?.config }); }
         }); companyData.routes = newRoutes;
 
@@ -510,128 +391,33 @@
             setSyncStatus("(Đã lưu)", "#10b981"); updateDashboardCount();
         } catch(e) { setSyncStatus("(Lỗi kết nối)", "#ef4444"); }
     }
-    function triggerSave() {
-        clearTimeout(saveTimer);
-        setSyncStatus("(Chờ lưu...)", "#f59e0b");
-        saveTimer = setTimeout(saveCompanyData, 1500);
-    }
-
-    // CRUD FLEET
-    function renderFleetTable() {
-        let tbody = document.getElementById('fleet-tbody');
-        tbody.innerHTML = '';
-        if(companyData.fleet.length === 0) { addFleetRow(); } 
-        else { companyData.fleet.forEach(ac => addFleetRow(ac)); }
-        updateDashboardCount();
-    }
-
-    function addFleetRow(ac = {id: 'AC_'+Date.now(), maker: '', model: '', range: '', maxspeed: '', pax: '', acheck: '', fuelcons: '', co2emis: '', price: '', cond: '100', speed: ''}) {
-        let tbody = document.getElementById('fleet-tbody');
-        let tr = document.createElement('tr');
-        tr.dataset.id = ac.id || ('AC_'+Date.now());
-        
-        let condColor = parseInt(ac.cond) < 50 ? 'color: #ef4444; font-weight: bold;' : '';
-
-        tr.innerHTML = `
-            <td class="f-stt" style="text-align: center; font-weight: bold;"></td>
-            <td><input type="text" class="f-maker" value="${ac.maker || ''}" placeholder="Hãng..." style="width: 100%; box-sizing: border-box;" oninput="triggerSave()"></td>
-            <td><input type="text" class="f-model" value="${ac.model || ''}" placeholder="Dòng..." style="width: 100%; box-sizing: border-box;" oninput="triggerSave()"></td>
-            <td><input type="text" class="f-range" value="${ac.range || ''}" placeholder="km" style="width: 100%; box-sizing: border-box; text-align: center;" oninput="formatCurrency(this); triggerSave()"></td>
-            <td><input type="text" class="f-maxspeed" value="${ac.maxspeed || ''}" placeholder="km/h" style="width: 100%; box-sizing: border-box; text-align: center;" oninput="formatCurrency(this); triggerSave()"></td>
-            <td><input type="text" class="f-pax" value="${ac.pax || ''}" placeholder="SL" style="width: 100%; box-sizing: border-box; text-align: center;" oninput="formatCurrency(this); triggerSave()"></td>
-            <td><input type="text" class="f-acheck" value="${ac.acheck || ''}" placeholder="$" style="width: 100%; box-sizing: border-box; text-align: center;" oninput="formatCurrency(this); triggerSave()"></td>
-            <td><input type="text" class="f-fuelcons" value="${ac.fuelcons || ''}" placeholder="Lbs/km" style="width: 100%; box-sizing: border-box; text-align: center;" oninput="triggerSave()"></td>
-            <td><input type="text" class="f-co2emis" value="${ac.co2emis || ''}" placeholder="kg/km" style="width: 100%; box-sizing: border-box; text-align: center;" oninput="triggerSave()"></td>
-            <td><input type="text" class="f-price" value="${ac.price || ''}" placeholder="$" style="width: 100%; box-sizing: border-box; text-align: center;" oninput="formatCurrency(this); triggerSave()"></td>
-            <td><input type="number" class="f-cond" value="${ac.cond || '100'}" min="0" max="100" style="width: 100%; box-sizing: border-box; text-align: center; ${condColor}" oninput="triggerSave()"></td>
-            <td><input type="text" class="f-speed" value="${ac.speed || ''}" placeholder="km/h" style="width: 100%; box-sizing: border-box; text-align: center;" oninput="formatCurrency(this); triggerSave()"></td>
-            <td><button class="btn-remove" onclick="removeFleetRow(this)">Bán</button></td>
-        `;
-        tbody.appendChild(tr);
-        updateFleetSTT();
-    }
-
-    function removeFleetRow(btn) {
-        if(confirm("Chắc chắn muốn bán/xóa tàu bay này?")) {
-            btn.closest('tr').remove();
-            updateFleetSTT();
-            triggerSave();
-        }
-    }
-
-    function updateFleetSTT() {
-        document.querySelectorAll('#fleet-tbody tr').forEach((tr, i) => tr.querySelector('.f-stt').innerText = i + 1);
-    }
-
-    function updateDashboardCount() {
-        let count = document.querySelectorAll('#fleet-tbody tr').length;
-        // Bỏ kiểm tra f-reg cũ, thay bằng f-maker
-        let firstMaker = document.querySelector('.f-maker')?.value.trim();
-        let firstModel = document.querySelector('.f-model')?.value.trim();
-        if(count === 1 && !firstMaker && !firstModel) count = 0;
-        
-        document.getElementById('total-fleet-count').innerText = count;
-    }
-
-    function renderMaintenance() {
-        let tbody = document.getElementById('maintenance-tbody');
-        tbody.innerHTML = '';
-        let needsCheck = false;
-
-        document.querySelectorAll('#fleet-tbody tr').forEach(tr => {
-            let cond = parseInt(tr.querySelector('.f-cond').value) || 0;
-            // Thay .f-reg thành .f-maker vì bảng mới đã bỏ Số hiệu
-            let maker = tr.querySelector('.f-maker').value || "N/A";
-            let model = tr.querySelector('.f-model').value || "N/A";
-
-            if (cond < 50 && (maker !== "N/A" || model !== "N/A")) {
-                needsCheck = true;
-                tbody.innerHTML += `
-                    <tr>
-                        <td style="font-weight: bold;">${maker}</td>
-                        <td>${model}</td>
-                        <td style="color: #ef4444; font-weight: bold;">${cond}%</td>
-                        <td><button class="btn-main" style="background:#f59e0b;" onclick="alert('Đã gửi yêu cầu A-Check cho đội bảo trì!');">Tiến hành Check</button></td>
-                    </tr>
-                `;
-            }
-        });
-
-        if(!needsCheck) {
-            tbody.innerHTML = `<tr><td colspan="4" style="color: #10b981; font-weight: bold; padding: 20px;">Tất cả tàu bay đều hoạt động tốt!</td></tr>`;
-        }
-    }
-function openCommonModal(html) {
-        document.getElementById('common-modal-content').innerHTML = html;
-        document.getElementById('common-modal').style.display = 'flex';
-    }
+    function triggerSave() { clearTimeout(saveTimer); setSyncStatus("(Chờ lưu...)", "#f59e0b"); saveTimer = setTimeout(saveCompanyData, 1500); }
+    function openCommonModal(html) { document.getElementById('common-modal-content').innerHTML = html; document.getElementById('common-modal').style.display = 'flex'; }
     function closeCommonModal() { document.getElementById('common-modal').style.display = 'none'; }
+    function parseCur(str) { return parseInt((str||"0").toString().replace(/\D/g, '')) || 0; }
 
-    // --- QUẢN LÝ HÃNG BAY (MAKERS) ---
-    function openMakersManager() {
-        let html = `<h2 style="margin-top:0; color:#0284c7; border-bottom:2px solid #e2e8f0; padding-bottom:10px;">🏢 Quản Lý Hãng Máy Bay</h2>
-        <div style="margin-bottom:10px; display:flex; gap:10px;">
-            <input type="text" id="new-maker-name" placeholder="Nhập tên hãng..." style="padding:10px; flex:1; border:1px solid #94a3b8; border-radius:4px;">
-            <button class="btn-add" onclick="addMaker()">Thêm Hãng</button>
-        </div>
-        <table style="width:100%; border-collapse:collapse; margin-bottom:15px;">
-            <tr style="background:#f1f5f9;"><th>STT</th><th>Tên Hãng Bay</th><th>Xóa</th></tr>
-            <tbody id="makers-tbody"></tbody>
-        </table>
-        <div style="text-align:right;"><button class="btn-main" onclick="closeCommonModal(); triggerSave(); renderFleetTable();">Đóng Lại</button></div>`;
-        openCommonModal(html); renderMakersList();
+    // --- QUỐC GIA ---
+    function openCountryManager() {
+        let html = `<h3>🌍 Danh Sách Quốc Gia</h3><div style="display:flex; gap:5px; margin-bottom:15px;">
+            <input type="text" id="new-c-en" placeholder="Tên TA (Bắt buộc)" style="flex:2; padding:8px;">
+            <input type="text" id="new-c-vi" placeholder="Tên QG" style="flex:2; padding:8px;">
+            <input type="text" id="new-c-code" placeholder="Mã QG (2 Ký tự)" maxlength="2" style="flex:1; padding:8px; text-transform:uppercase;">
+            <button class="btn-add" onclick="addCountry()">Thêm</button></div>
+        <table style="width:100%; border-collapse:collapse;"><tr style="background:#f1f5f9;"><th>STT</th><th>English</th><th>Tên QG</th><th>Mã</th><th>Xóa</th></tr><tbody id="countries-tbody"></tbody></table><div style="text-align:right; margin-top:15px;"><button class="btn-main" onclick="closeCommonModal(); renderAirportsTable(); triggerSave();">Đóng</button></div>`;
+        openCommonModal(html); renderCountriesList();
     }
-    function renderMakersList() {
-        let tb = document.getElementById('makers-tbody'); tb.innerHTML = '';
-        companyData.makers.forEach((m, i) => {
-            tb.innerHTML += `<tr><td style="text-align:center">${i+1}</td><td style="text-align:center; font-weight:bold;">${m.name}</td><td style="text-align:center"><button class="btn-remove" onclick="removeMaker('${m.id}')">Xóa</button></td></tr>`;
+    function renderCountriesList() {
+        let tb = document.getElementById('countries-tbody'); tb.innerHTML = '';
+        companyData.countries.forEach((c, i) => {
+            tb.innerHTML += `<tr><td style="text-align:center">${i+1}</td><td>${c.en}</td><td>${c.vi}</td><td style="text-align:center">${c.code}</td><td style="text-align:center"><button class="btn-remove" onclick="removeCountry('${c.id}')">X</button></td></tr>`;
         });
     }
-    function addMaker() {
-        let name = document.getElementById('new-maker-name').value.trim();
-        if(name) { companyData.makers.push({id: 'MK_'+Date.now(), name: name}); document.getElementById('new-maker-name').value = ''; renderMakersList(); }
+    function addCountry() {
+        let en = document.getElementById('new-c-en').value.trim(); let vi = document.getElementById('new-c-vi').value.trim(); let code = document.getElementById('new-c-code').value.trim().toUpperCase();
+        if(!en) return alert("Tên tiếng Anh là bắt buộc!");
+        companyData.countries.push({id: 'CO_'+Date.now(), en, vi, code}); renderCountriesList();
     }
-    function removeMaker(id) { companyData.makers = companyData.makers.filter(m => m.id !== id); renderMakersList(); }
+    function removeCountry(id) { companyData.countries = companyData.countries.filter(c => c.id !== id); renderCountriesList(); }
 
     // --- SÂN BAY & HUB ---
     function renderAirportsTable() {
@@ -641,38 +427,28 @@ function openCommonModal(html) {
     function addAirportRow(ap = {}) {
         let tbody = document.getElementById('airports-tbody'); let tr = document.createElement('tr');
         tr.dataset.id = ap.id || ('AP_'+Date.now()+Math.random());
+        let countryOpts = companyData.countries.map(c => `<option value="${c.id}" ${ap.countryId===c.id?'selected':''}>${c.vi||c.en} (${c.code})</option>`).join('');
         tr.innerHTML = `
             <td class="a-stt" style="text-align: center; font-weight: bold;"></td>
-            <td><input type="text" class="a-country" value="${ap.country || ''}" placeholder="VD: Vietnam" style="width: 100%; box-sizing: border-box;" oninput="triggerSave()"></td>
-            <td><input type="text" class="a-name" value="${ap.name || ''}" placeholder="VD: Tan Son Nhat" style="width: 100%; box-sizing: border-box;" oninput="triggerSave()"></td>
-            <td><input type="text" class="a-icao" value="${ap.icao || ''}" placeholder="VVTS" style="width: 100%; box-sizing: border-box; text-align: center;" oninput="this.value = this.value.toUpperCase(); triggerSave()"></td>
-            <td><input type="text" class="a-iata" value="${ap.iata || ''}" placeholder="SGN" style="width: 100%; box-sizing: border-box; text-align: center;" oninput="this.value = this.value.toUpperCase(); triggerSave()"></td>
-            <td><button class="btn-remove" onclick="removeAirportRow(this)">Xóa</button></td>
+            <td><select class="a-country" onchange="triggerSave()" style="width:100%; padding:6px;"><option value="">-- Chọn QG --</option>${countryOpts}</select></td>
+            <td><input type="text" class="a-name" value="${ap.name || ''}" placeholder="Tên Sân Bay" style="width: 100%; box-sizing: border-box;" oninput="triggerSave()"></td>
+            <td><input type="text" class="a-icao" value="${ap.icao || ''}" placeholder="ICAO" maxlength="4" style="width: 100%; box-sizing: border-box; text-align: center;" oninput="this.value = this.value.toUpperCase(); triggerSave()"></td>
+            <td><input type="text" class="a-iata" value="${ap.iata || ''}" placeholder="IATA" maxlength="3" style="width: 100%; box-sizing: border-box; text-align: center;" oninput="this.value = this.value.toUpperCase(); triggerSave()"></td>
+            <td><button class="btn-remove" onclick="if(confirm('Xóa?')){ this.closest('tr').remove(); triggerSave(); }">Xóa</button></td>
         `;
         tbody.appendChild(tr); document.querySelectorAll('#airports-tbody tr').forEach((r, i) => r.querySelector('.a-stt').innerText = i + 1);
     }
-    function removeAirportRow(btn) { if(confirm("Xóa sân bay này?")) { btn.closest('tr').remove(); triggerSave(); } }
 
-    function handleHubBaseCheck(cb) {
-        if(cb.checked) { document.querySelectorAll('.h-base').forEach(box => { if(box !== cb) box.checked = false; }); }
+    function autoFillHub(sel) {
+        let tr = sel.closest('tr'); let ap = globalAirports.find(a => a.id === sel.value);
+        if(ap) {
+            let country = companyData.countries.find(c => c.id === ap.countryId);
+            tr.querySelector('.h-country').value = country ? `${country.en}/${country.code}` : "---";
+            tr.querySelector('.h-code').value = `${ap.icao||'XXXX'}/${ap.iata||'XXX'}`;
+        }
         triggerSave();
     }
-    function openIcaoIataManager(inputEle) {
-        currentActiveInput = inputEle;
-        let parts = inputEle.value.split('/'); let cIcao = parts[0] || ''; let cIata = parts[1] || '';
-        let html = `<h3>Nhập Mã ICAO & IATA</h3>
-        <label>Mã ICAO (4 Ký tự): <input type="text" id="modal-icao" value="${cIcao}" maxlength="4" style="text-transform:uppercase; display:block; width:100%; padding:8px; margin-bottom:10px;"></label>
-        <label>Mã IATA (3 Ký tự): <input type="text" id="modal-iata" value="${cIata}" maxlength="3" style="text-transform:uppercase; display:block; width:100%; padding:8px; margin-bottom:15px;"></label>
-        <button class="btn-main" onclick="saveIcaoIata()">Lưu Lại</button> <button class="btn-remove" onclick="closeCommonModal()">Hủy</button>`;
-        openCommonModal(html);
-    }
-    function saveIcaoIata() {
-        let icao = document.getElementById('modal-icao').value.toUpperCase().replace(/[^A-Z]/g,'');
-        let iata = document.getElementById('modal-iata').value.toUpperCase().replace(/[^A-Z]/g,'');
-        if(currentActiveInput) { currentActiveInput.value = (icao || 'XXXX') + '/' + (iata || 'XXX'); triggerSave(); }
-        closeCommonModal();
-    }
-
+    function handleHubBaseCheck(cb) { if(cb.checked) { document.querySelectorAll('.h-base').forEach(box => { if(box !== cb) box.checked = false; }); } triggerSave(); }
     function renderHubsTable() {
         let tbody = document.getElementById('hubs-tbody'); tbody.innerHTML = '';
         if(companyData.hubs.length === 0) { addHubRow(); } else { companyData.hubs.forEach(hb => addHubRow(hb)); }
@@ -680,18 +456,28 @@ function openCommonModal(html) {
     function addHubRow(hb = {}) {
         let tbody = document.getElementById('hubs-tbody'); let tr = document.createElement('tr');
         tr.dataset.id = hb.id || ('HB_'+Date.now());
+        let apOpts = globalAirports.map(a => `<option value="${a.id}" ${hb.airportId===a.id?'selected':''}>${a.name}</option>`).join('');
+        
+        let cName = "---", codeName = "---";
+        if(hb.airportId) {
+            let ap = globalAirports.find(a => a.id === hb.airportId);
+            if(ap) {
+                let country = companyData.countries.find(c => c.id === ap.countryId);
+                cName = country ? `${country.en}/${country.code}` : "---"; codeName = `${ap.icao||'XXXX'}/${ap.iata||'XXX'}`;
+            }
+        }
         tr.innerHTML = `
             <td class="h-stt" style="text-align: center; font-weight: bold;"></td>
-            <td><input type="text" class="h-name" value="${hb.name || ''}" placeholder="Tên HUB..." style="width: 100%; box-sizing: border-box;" oninput="triggerSave()"></td>
-            <td><input type="text" class="h-country" value="${hb.country || ''}" placeholder="Tên Quốc Gia/Mã (Vietnam/VN)" style="width: 100%; box-sizing: border-box; text-align:center;" oninput="triggerSave()"></td>
-            <td><input type="text" class="h-code" value="${hb.code || ''}" readonly onclick="openIcaoIataManager(this)" placeholder="Bấm chọn..." style="width: 100%; box-sizing: border-box; text-align: center; cursor:pointer; background:#f8fafc; font-weight:bold;"></td>
+            <td><select class="h-airport" onchange="autoFillHub(this)" style="width:100%; padding:6px;"><option value="">-- Chọn Sân Bay --</option>${apOpts}</select></td>
+            <td><input type="text" class="h-country" value="${cName}" readonly style="width: 100%; box-sizing: border-box; text-align:center; background:#f1f5f9;"></td>
+            <td><input type="text" class="h-code" value="${codeName}" readonly style="width: 100%; box-sizing: border-box; text-align: center; background:#f1f5f9; font-weight:bold;"></td>
             <td style="text-align:center;"><input type="checkbox" class="h-base" ${hb.base ? 'checked' : ''} onchange="handleHubBaseCheck(this)" style="width:20px; height:20px; cursor:pointer;"></td>
-            <td><button class="btn-remove" onclick="removeHubRow(this)">Xóa</button></td>
+            <td><button class="btn-remove" onclick="if(confirm('Xóa HUB?')){ this.closest('tr').remove(); triggerSave(); }">Xóa</button></td>
         `;
         tbody.appendChild(tr); document.querySelectorAll('#hubs-tbody tr').forEach((r, i) => r.querySelector('.h-stt').innerText = i + 1);
     }
-    function removeHubRow(btn) { if(confirm("Chắc chắn muốn xóa HUB này?")) { btn.closest('tr').remove(); triggerSave(); } }
 
+    // --- CẤU HÌNH TUYẾN & NHU CẦU ---
     function renderFlightRoutesTable() {
         let tbody = document.getElementById('flight-routes-tbody'); tbody.innerHTML = '';
         if(companyData.flightRoutes.length === 0) { addFlightRouteRow(); } else { companyData.flightRoutes.forEach(fr => addFlightRouteRow(fr)); }
@@ -699,207 +485,215 @@ function openCommonModal(html) {
     function addFlightRouteRow(fr = {}) {
         let tbody = document.getElementById('flight-routes-tbody'); let tr = document.createElement('tr');
         tr.dataset.id = fr.id || ('FR_'+Date.now());
-        let hubOpts = companyData.hubs.map(h => `<option value="${h.id}" ${fr.hub===h.id ? 'selected':''}>${h.name} (${h.code})</option>`).join('');
-        let destOpts = globalAirports.map(a => `<option value="${a.id}" ${fr.dest===a.id ? 'selected':''}>${a.name} (${a.icao||'---'} / ${a.iata||'---'})</option>`).join('');
+        let hubOpts = companyData.hubs.map(h => {
+            let ap = globalAirports.find(a=>a.id===h.airportId); return `<option value="${h.id}" ${fr.hub===h.id?'selected':''}>${ap?.name||'HUB'} (${ap?.icao||'---'})</option>`;
+        }).join('');
+        let destOpts = globalAirports.map(a => `<option value="${a.id}" ${fr.dest===a.id?'selected':''}>${a.name} (${a.icao||'---'})</option>`).join('');
         tr.innerHTML = `
             <td class="fr-stt" style="text-align: center; font-weight: bold;"></td>
             <td><select class="fr-hub" onchange="triggerSave()" style="width: 100%; padding:6px;"><option value="">-- Chọn HUB --</option>${hubOpts}</select></td>
             <td><select class="fr-dest" onchange="triggerSave()" style="width: 100%; padding:6px;"><option value="">-- Chọn Sân Bay Đến --</option>${destOpts}</select></td>
-            <td><button class="btn-remove" onclick="removeFlightRouteRow(this)">Xóa</button></td>
+            <td>
+                <button class="btn-main" style="background:#3b82f6; padding:6px;" onclick="showFlightRouteInfo('${tr.dataset.id}')">Chi Tiết</button>
+                <button class="btn-remove" onclick="if(confirm('Xóa?')){ this.closest('tr').remove(); triggerSave(); }">Xóa</button>
+            </td>
         `;
         tbody.appendChild(tr); document.querySelectorAll('#flight-routes-tbody tr').forEach((r, i) => r.querySelector('.fr-stt').innerText = i + 1);
     }
-    function removeFlightRouteRow(btn) { if(confirm("Xóa tuyến bay này?")) { btn.closest('tr').remove(); triggerSave(); } }
-
-    // --- CẤU HÌNH MÁY BAY (FLEET) ---
-    function openCrewManager(inputEle) {
-        currentActiveInput = inputEle;
-        let dataInput = inputEle.nextElementSibling;
-        let data = JSON.parse(dataInput.value || '{"p":0,"c":0,"e":0,"t":0}');
-        let html = `<h3>Phi Hành Đoàn</h3>
-        <label style="display:block; margin-bottom:5px;">Pilots: <input type="number" id="c-p" value="${data.p||0}" style="padding:5px; width:60px;"></label>
-        <label style="display:block; margin-bottom:5px;">Crew: <input type="number" id="c-c" value="${data.c||0}" style="padding:5px; width:60px;"></label>
-        <label style="display:block; margin-bottom:5px;">Engineers: <input type="number" id="c-e" value="${data.e||0}" style="padding:5px; width:60px;"></label>
-        <label style="display:block; margin-bottom:15px;">Tech: <input type="number" id="c-t" value="${data.t||0}" style="padding:5px; width:60px;"></label>
-        <button class="btn-main" onclick="saveCrew()">Lưu</button> <button class="btn-remove" onclick="closeCommonModal()">Hủy</button>`;
-        openCommonModal(html);
-    }
-    function saveCrew() {
-        let p = document.getElementById('c-p').value||0; let c = document.getElementById('c-c').value||0;
-        let e = document.getElementById('c-e').value||0; let t = document.getElementById('c-t').value||0;
-        if(currentActiveInput) {
-            currentActiveInput.value = `P:${p}, C:${c}, E:${e}, T:${t}`;
-            currentActiveInput.nextElementSibling.value = JSON.stringify({p,c,e,t});
-            triggerSave();
-        }
-        closeCommonModal();
-    }
-
-    function renderFleetTable() {
-        let tbody = document.getElementById('fleet-tbody'); tbody.innerHTML = '';
-        if(companyData.fleet.length === 0) { addFleetRow(); } else { companyData.fleet.forEach(ac => addFleetRow(ac)); }
-    }
-    function addFleetRow(ac = {}) {
-        let tbody = document.getElementById('fleet-tbody'); let tr = document.createElement('tr');
-        tr.dataset.id = ac.id || ('AC_'+Date.now());
+    function showFlightRouteInfo(frId) {
+        let fr = companyData.flightRoutes.find(r => r.id === frId); if(!fr) return;
+        let hub = companyData.hubs.find(h=>h.id===fr.hub); let hAp = globalAirports.find(a=>a.id===hub?.airportId);
+        let dAp = globalAirports.find(a=>a.id===fr.dest);
+        let title = `${hAp?.name||'HUB'} ➔ ${dAp?.name||'Đích'}`;
         
-        let makerOpts = companyData.makers.map(m => `<option value="${m.id}" ${ac.maker===m.id?'selected':''}>${m.name}</option>`).join('');
-
-        tr.innerHTML = `
-            <td class="f-stt" style="text-align: center; font-weight: bold;"></td>
-            <td><select class="f-maker" style="width: 100%; box-sizing: border-box;" onchange="triggerSave()"><option value="">-- Hãng --</option>${makerOpts}</select></td>
-            <td><input type="text" class="f-model" value="${ac.model || ''}" placeholder="Dòng..." style="width: 100%; box-sizing: border-box;" oninput="triggerSave()"></td>
-            <td><input type="text" class="f-range" value="${ac.range || ''}" placeholder="km" style="width: 100%; box-sizing: border-box; text-align: center;" oninput="formatCurrency(this); triggerSave()"></td>
-            <td><input type="text" class="f-maxspeed" value="${ac.maxspeed || ''}" placeholder="km/h" style="width: 100%; box-sizing: border-box; text-align: center;" oninput="formatCurrency(this); triggerSave()"></td>
-            <td><input type="text" class="f-pax" value="${ac.pax || ''}" placeholder="Ghế Y" style="width: 100%; box-sizing: border-box; text-align: center; color:#eab308; font-weight:bold;" oninput="formatCurrency(this); triggerSave()"></td>
-            <td>
-                <input type="text" class="f-crew" value="${ac.crew_str || ''}" readonly onclick="openCrewManager(this)" placeholder="Nhấn nhập..." style="width: 100%; box-sizing: border-box; text-align: center; cursor:pointer; font-size:14px; background:#f8fafc;">
-                <input type="hidden" class="f-crew-data" value='${JSON.stringify(ac.crew_data||{})}'>
-            </td>
-            <td><input type="text" class="f-acheck" value="${ac.acheck || ''}" placeholder="$" style="width: 100%; box-sizing: border-box; text-align: center;" oninput="formatCurrency(this); triggerSave()"></td>
-            <td><input type="text" class="f-maintcheck" value="${ac.maintcheck || ''}" placeholder="Giờ" style="width: 100%; box-sizing: border-box; text-align: center;" oninput="formatCurrency(this); triggerSave()"></td>
-            <td><input type="text" class="f-fuelcons" value="${ac.fuelcons || ''}" placeholder="Lbs/km" style="width: 100%; box-sizing: border-box; text-align: center;" oninput="triggerSave()"></td>
-            <td><input type="text" class="f-co2emis" value="${ac.co2emis || ''}" placeholder="kg/km" style="width: 100%; box-sizing: border-box; text-align: center;" oninput="triggerSave()"></td>
-            <td><input type="text" class="f-price" value="${ac.price || ''}" placeholder="$" style="width: 100%; box-sizing: border-box; text-align: center;" oninput="formatCurrency(this); triggerSave()"></td>
-            <td><input type="text" class="f-speed" value="${ac.speed || ''}" placeholder="km/h" style="width: 100%; box-sizing: border-box; text-align: center;" oninput="formatCurrency(this); triggerSave()"></td>
-            <td><button class="btn-remove" onclick="if(confirm('Xóa tàu bay?')) { this.closest('tr').remove(); triggerSave(); }">Bán</button></td>
-        `;
-        tbody.appendChild(tr); document.querySelectorAll('#fleet-tbody tr').forEach((r, i) => r.querySelector('.f-stt').innerText = i + 1);
-    }
-
-    // --- PHÂN CÔNG ĐỘI BAY (ROUTES) ---
-    function openRouteSelector(btnEle) {
-        currentActiveRowId = btnEle.closest('tr').dataset.id;
-        let html = `<h3 style="margin-top:0;">🗺️ Chọn Chặng Bay</h3><div style="max-height:400px; overflow-y:auto;"><table style="width:100%; border-collapse:collapse; text-align:left;">
-            <tr style="background:#f1f5f9;"><th>Tuyến Bay (Từ HUB -> Đích)</th><th style="text-align:center;">Chọn</th></tr>`;
+        let assigned = companyData.routes.filter(r => r.fRouteId === frId && r.aircraft);
+        let dem = companyData.demands.find(d => d.frId === frId) || {distance:0, y:0, j:0, f:0};
         
-        companyData.flightRoutes.forEach(fr => {
-            let hub = companyData.hubs.find(h => h.id === fr.hub); let dest = globalAirports.find(a => a.id === fr.dest);
-            if(hub && dest) {
-                html += `<tr><td style="padding:10px; border-bottom:1px solid #e2e8f0;"><b>${hub.name}</b> (${hub.code||'---'}) ➔ <b>${dest.name}</b> (${dest.icao||'---'})</td>
-                <td style="text-align:center; border-bottom:1px solid #e2e8f0;"><button class="btn-add" onclick="processFlightRouteAssign('${fr.id}')">Chọn</button></td></tr>`;
-            }
+        let acHtml = assigned.map(r => {
+            let ac = companyData.fleet.find(f => f.id === r.aircraft); 
+            let cY = r.config?.y!==undefined ? r.config.y : parseCur(ac?.pax);
+            let cJ = r.config?.j||0; let cF = r.config?.f||0;
+            return `<li>Tàu bay [Mã: ${r.route}]: ${ac?.model||'Unknown'} (Y:${cY} J:${cJ} F:${cF})</li>`;
+        }).join('');
+        
+        let sumY = 0, sumJ = 0, sumF = 0;
+        assigned.forEach(r => {
+            let ac = companyData.fleet.find(f => f.id === r.aircraft);
+            sumY += r.config?.y!==undefined ? r.config.y : parseCur(ac?.pax); sumJ += r.config?.j||0; sumF += r.config?.f||0;
         });
-        html += `</table></div><div style="text-align:right; margin-top:15px;"><button class="btn-remove" onclick="closeCommonModal()">Đóng</button></div>`;
+
+        let html = `<h3>🗺️ ${title}</h3>
+            <p><b>Khoảng cách:</b> ${formatNumber(dem.distance)} km</p>
+            <p><b>Nhu cầu:</b> Y: ${formatNumber(dem.y)} | J: ${formatNumber(dem.j)} | F: ${formatNumber(dem.f)}</p>
+            <hr><p><b>Số tàu bay đang khai thác:</b> ${assigned.length}</p>
+            <ul>${acHtml || '<li>Chưa có tàu bay nào</li>'}</ul>
+            <hr><p><b>Đáp ứng nhu cầu:</b> Y: ${sumY}/${dem.y} | J: ${sumJ}/${dem.j} | F: ${sumF}/${dem.f}</p>
+            <div style="text-align:right;"><button class="btn-remove" onclick="closeCommonModal()">Đóng</button></div>
+        `;
         openCommonModal(html);
     }
 
-    function processFlightRouteAssign(fRouteId) {
-        let tr = document.querySelector(`#routes-tbody tr[data-id="${currentActiveRowId}"]`);
-        let rInput = tr.querySelector('.r-route'); let sInput = tr.querySelector('.r-segment');
-        tr.querySelector('.r-froute-id').value = fRouteId;
-        
-        let fr = companyData.flightRoutes.find(r => r.id === fRouteId);
-        let hub = companyData.hubs.find(h => h.id === fr.hub); let dest = globalAirports.find(a => a.id === fr.dest);
-        
-        // Tạo Mã Tuyến: Lấy mã QG của HUB (2 char)
-        let countryCode = "XX";
-        if(hub.country && hub.country.includes('/')) { countryCode = hub.country.split('/')[1].trim().substring(0,2).toUpperCase(); } 
-        else if(hub.country) { countryCode = hub.country.substring(0,2).toUpperCase(); }
-        
-        // Tạo Mã Chặng: 2 kí tự ICAO Hub + 2 kí tự ICAO Dest
-        let hubIcao = hub.code ? hub.code.split('/')[0].trim() : "XXXX";
-        let destIcao = dest.icao || "XXXX";
-        let segPrefix = (hubIcao.slice(-2) + destIcao.slice(-2)).toUpperCase();
-        
-        let maxRoute = 0, maxSeg = 0;
-        document.querySelectorAll('.r-route').forEach(inp => { if(inp.value.startsWith(countryCode+'-')) { let num = parseInt(inp.value.split('-')[1]); if(num > maxRoute) maxRoute = num; } });
-        document.querySelectorAll('.r-segment').forEach(inp => { if(inp.value.startsWith(segPrefix+'-')) { let num = parseInt(inp.value.split('-')[1]); if(num > maxSeg) maxSeg = num; } });
-        
-        rInput.value = countryCode + '-' + (maxRoute + 1).toString().padStart(3,'0');
-        sInput.value = segPrefix + '-' + (maxSeg + 1).toString().padStart(3,'0');
-        
-        closeCommonModal(); triggerSave();
+    function renderDemandsTable() {
+        let tbody = document.getElementById('demands-tbody'); tbody.innerHTML = '';
+        companyData.flightRoutes.forEach((fr, i) => {
+            let hub = companyData.hubs.find(h=>h.id===fr.hub); let hAp = globalAirports.find(a=>a.id===hub?.airportId);
+            let dAp = globalAirports.find(a=>a.id===fr.dest);
+            let name = `${hAp?.name||'HUB'} ➔ ${dAp?.name||'Đích'}`;
+            let d = companyData.demands.find(x => x.frId === fr.id) || {distance:"", y:"", j:"", f:""};
+            tbody.innerHTML += `<tr data-frid="${fr.id}">
+                <td style="text-align:center;">${i+1}</td><td style="font-weight:bold;">${name}</td>
+                <td><input type="text" class="d-dist" value="${d.distance}" placeholder="km" oninput="formatCurrency(this); triggerSave()" style="width:100%; text-align:center;"></td>
+                <td><input type="text" class="d-y" value="${d.y}" oninput="formatCurrency(this); triggerSave()" style="width:100%; text-align:center; color:#eab308; font-weight:bold;"></td>
+                <td><input type="text" class="d-j" value="${d.j}" oninput="formatCurrency(this); triggerSave()" style="width:100%; text-align:center; color:#3b82f6; font-weight:bold;"></td>
+                <td><input type="text" class="d-f" value="${d.f}" oninput="formatCurrency(this); triggerSave()" style="width:100%; text-align:center; color:#a855f7; font-weight:bold;"></td>
+            </tr>`;
+        });
     }
 
-    function checkConfigChange(baseY) {
-        let y = parseInt(document.getElementById('cfg-y').value)||0; let j = parseInt(document.getElementById('cfg-j').value)||0; let f = parseInt(document.getElementById('cfg-f').value)||0;
-        if(y !== baseY || j > 0 || f > 0) {
-            document.getElementById('cfg-mod-area').style.display = 'block'; document.getElementById('cfg-default-area').style.display = 'none';
-        } else {
-            document.getElementById('cfg-mod-area').style.display = 'none'; document.getElementById('cfg-default-area').style.display = 'block';
-        }
+    // --- FLEET (Chung với đoạn trước) ---
+    function openMakersManager() { /* (Đã có logic trong bản sửa trước, nhắc lại cho đủ) */
+        let html = `<h3>🏢 Hãng Máy Bay</h3><div style="display:flex; gap:10px; margin-bottom:15px;"><input type="text" id="new-maker-name" style="flex:1; padding:8px;"><button class="btn-add" onclick="addMaker()">Thêm</button></div><table style="width:100%;"><tbody id="makers-tbody"></tbody></table><div style="text-align:right;"><button class="btn-main" onclick="closeCommonModal(); renderFleetTable();">Đóng</button></div>`;
+        openCommonModal(html); renderMakersList();
     }
+    function renderMakersList() { let tb = document.getElementById('makers-tbody'); tb.innerHTML = companyData.makers.map((m,i)=>`<tr><td>${i+1}</td><td>${m.name}</td><td><button onclick="companyData.makers=companyData.makers.filter(x=>x.id!=='${m.id}'); renderMakersList()">X</button></td></tr>`).join(''); }
+    function addMaker() { let n = document.getElementById('new-maker-name').value; if(n){ companyData.makers.push({id:'MK_'+Date.now(), name:n}); renderMakersList(); } }
 
-    function saveAcConfig(routeId, isMod) {
-        let rt = companyData.routes.find(r => r.id === routeId); if(!rt.config) rt.config = {};
-        rt.config.y = parseInt(document.getElementById('cfg-y').value)||0;
-        rt.config.j = parseInt(document.getElementById('cfg-j').value)||0;
-        rt.config.f = parseInt(document.getElementById('cfg-f').value)||0;
-        rt.config.cost = isMod ? document.getElementById('cfg-cost').value : '';
-        triggerSave(); closeCommonModal(); alert('Đã lưu dữ liệu Cấu Hình Tàu Bay thành công!');
+    function openCrewManager(inputEle) {
+        currentActiveInput = inputEle; let data = JSON.parse(inputEle.nextElementSibling.value || '{"p":0,"c":0,"e":0,"t":0}');
+        let html = `<h3>Phi Hành Đoàn</h3><label>Pilots: <input type="number" id="c-p" value="${data.p||0}"></label><label>Crew: <input type="number" id="c-c" value="${data.c||0}"></label><label>Engineers: <input type="number" id="c-e" value="${data.e||0}"></label><label>Tech: <input type="number" id="c-t" value="${data.t||0}"></label><br><button onclick="saveCrew()">Lưu</button> <button onclick="closeCommonModal()">Hủy</button>`;
+        openCommonModal(html);
     }
+    function saveCrew() { let p = document.getElementById('c-p').value||0, c=document.getElementById('c-c').value||0, e=document.getElementById('c-e').value||0, t=document.getElementById('c-t').value||0; if(currentActiveInput){ currentActiveInput.value=`P:${p}, C:${c}, E:${e}, T:${t}`; currentActiveInput.nextElementSibling.value=JSON.stringify({p,c,e,t}); triggerSave(); } closeCommonModal(); }
 
     function showAircraftInfo(acId, routeId) {
-        if(!acId) return alert("Bạn chưa chọn dòng máy bay!");
-        let ac = companyData.fleet.find(f => f.id === acId); if(!ac) return alert("Tàu bay không tồn tại!");
-        let rt = companyData.routes.find(r => r.id === routeId) || {};
-        let mk = companyData.makers.find(m => m.id === ac.maker);
-        let makerName = mk ? mk.name : '---';
-
-        let baseY = parseInt(ac.pax.replace(/\D/g, ''))||0;
-        let cY = rt.config?.y !== undefined ? rt.config.y : baseY; let cJ = rt.config?.j || 0; let cF = rt.config?.f || 0;
-        let isModified = (cY !== baseY || cJ > 0 || cF > 0);
+        let ac = companyData.fleet.find(f => f.id === acId); if(!ac) return; let rt = companyData.routes.find(r => r.id === routeId) || {};
+        let mk = companyData.makers.find(m => m.id === ac.maker); let makerName = mk ? mk.name : '---';
+        let baseY = parseCur(ac.pax); let cY = rt.config?.y !== undefined ? rt.config.y : baseY; let cJ = rt.config?.j || 0; let cF = rt.config?.f || 0;
+        
+        // Tính toán Lịch sử & Chi phí A-Check
+        let hist = companyData.history.filter(h => h.acId === acId);
+        let totalAcheckPaid = hist.reduce((sum, h) => sum + (h.acheckCost||0), 0);
+        
+        let histRows = hist.slice(-5).map(h => `<tr><td style="font-size:12px; border:1px solid #ccc; padding:4px;">${h.date}</td><td style="font-size:12px; border:1px solid #ccc; padding:4px; color:#10b981;">+${formatNumber(h.revenue)}$</td><td style="font-size:12px; border:1px solid #ccc; padding:4px; color:#ef4444;">-${formatNumber(h.fuel + h.co2 + h.maint + h.acheckCost)}$</td></tr>`).join('');
 
         let html = `
-            <h2 style="margin-top:0; color:#0284c7; border-bottom:2px solid #e2e8f0; padding-bottom:10px;">📄 CHI TIẾT TÀU BAY</h2>
-            <div style="display:flex; justify-content:space-between; margin-bottom:5px;"><b>Hãng sản xuất:</b> <span style="color:#0284c7; font-weight:bold;">${makerName}</span></div>
-            <div style="display:flex; justify-content:space-between; margin-bottom:5px;"><b>Dòng máy bay:</b> <span style="color:#0284c7; font-weight:bold;">${ac.model || '---'}</span></div>
-            <div style="display:flex; justify-content:space-between; margin-bottom:5px;"><b>Tầm bay (Range):</b> <span>${ac.range || 0} km</span></div>
-            <div style="display:flex; justify-content:space-between; margin-bottom:5px;"><b>Tốc độ TT:</b> <span>${ac.speed || 0} km/h</span></div>
-            <div style="display:flex; justify-content:space-between; margin-bottom:5px;"><b>Tiêu hao nhiên liệu:</b> <span style="color:#ef4444;">${ac.fuelcons || 0} Lbs/km</span></div>
+            <h2 style="color:#0284c7; margin-top:0;">📄 CHI TIẾT MÁY BAY: ${makerName} ${ac.model}</h2>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; font-size:14px;">
+                <div><b>Tầm bay:</b> ${ac.range||0} km</div><div><b>Tốc độ TT:</b> ${ac.speed||0} km/h</div>
+                <div><b>Maint Check:</b> ${ac.maintcheck||0} Giờ</div><div><b>Giá A-Check:</b> ${ac.acheck||0} $</div>
+            </div>
             
-            <div style="border:2px solid #e2e8f0; background:#f8fafc; padding:15px; border-radius:8px; margin-top:15px;">
-                <p style="margin:0 0 10px 0; font-weight:bold; color:#0f172a;">🛠 Sửa Đổi Cấu Hình (Sức chứa)</p>
-                <div style="display:flex; gap:10px; margin-bottom:15px; align-items:center;">
-                    <label>Y: <input type="number" id="cfg-y" value="${cY}" style="width:60px; padding:5px; border:1px solid #cbd5e1; font-weight:bold; color:#eab308;" oninput="checkConfigChange(${baseY})"></label>
-                    <label>J: <input type="number" id="cfg-j" value="${cJ}" style="width:60px; padding:5px; border:1px solid #cbd5e1; font-weight:bold; color:#3b82f6;" oninput="checkConfigChange(${baseY})"></label>
-                    <label>F: <input type="number" id="cfg-f" value="${cF}" style="width:60px; padding:5px; border:1px solid #cbd5e1; font-weight:bold; color:#a855f7;" oninput="checkConfigChange(${baseY})"></label>
+            <button class="btn-main" style="margin-top:15px; width:100%;" onclick="document.getElementById('cfg-toggle').style.display='block'">⚙️ Sửa Cấu Hình Ghế</button>
+            <div id="cfg-toggle" style="display:none; border:2px solid #e2e8f0; background:#f8fafc; padding:15px; border-radius:8px; margin-top:10px;">
+                <div style="display:flex; gap:10px; margin-bottom:10px;">
+                    <label>Y: <input type="number" id="cfg-y" value="${cY}" style="width:60px;"></label><label>J: <input type="number" id="cfg-j" value="${cJ}" style="width:60px;"></label><label>F: <input type="number" id="cfg-f" value="${cF}" style="width:60px;"></label>
                 </div>
-                <div id="cfg-mod-area" style="display:${isModified ? 'block':'none'}; border-top:1px dashed #cbd5e1; padding-top:10px;">
-                    <label style="display:block; margin-bottom:10px; color:#ef4444; font-weight:bold;">Giá tiền sửa đổi cấu hình ($): <input type="text" id="cfg-cost" value="${rt.config?.cost||''}" style="width:150px; padding:5px;" oninput="formatCurrency(this)"></label>
-                    <button class="btn-main" style="background:#f59e0b;" onclick="saveAcConfig('${routeId}', true)">Lưu Cấu Hình Mới</button>
-                </div>
-                <div id="cfg-default-area" style="display:${!isModified ? 'block':'none'}; border-top:1px dashed #cbd5e1; padding-top:10px;">
-                    <p style="color:#10b981; margin:0 0 10px 0; font-weight:bold;">Giá mua thực tế (Theo Fleet): ${ac.price||0} $</p>
-                    <button class="btn-main" onclick="saveAcConfig('${routeId}', false)">Giữ Cấu Hình Gốc</button>
-                </div>
+                <label>Chi phí sửa ghế ($): <input type="text" id="cfg-cost" value="${rt.config?.cost||''}" oninput="formatCurrency(this)"></label>
+                <div style="margin-top:10px;"><button class="btn-add" onclick="saveAcConfig('${routeId}', true)">Lưu Cấu Hình</button> <button class="btn-main" onclick="saveAcConfig('${routeId}', false)">Reset Về Gốc (Miễn phí)</button></div>
+                <p style="color:#64748b; font-size:12px; margin-top:5px;">(Giá mua gốc: ${ac.price||0} $)</p>
+            </div>
+            
+            <div style="margin-top:20px; border-top:2px solid #e2e8f0; padding-top:10px;">
+                <p><b>Tổng chi phí đã A-Check:</b> <span style="color:#ef4444;">${formatNumber(totalAcheckPaid)} $</span></p>
+                <b>Lịch Sử 5 Chuyến Bay Gần Nhất:</b>
+                <table style="width:100%; border-collapse:collapse; margin-top:5px;">
+                    <tr style="background:#f1f5f9;"><th style="border:1px solid #ccc; padding:4px;">Ngày</th><th style="border:1px solid #ccc; padding:4px;">Doanh Thu</th><th style="border:1px solid #ccc; padding:4px;">Tổng Chi</th></tr>
+                    ${histRows || '<tr><td colspan="3" style="text-align:center; padding:10px;">Chưa có dữ liệu cất cánh</td></tr>'}
+                </table>
             </div>
             <div style="text-align:right; margin-top:15px;"><button class="btn-remove" onclick="closeCommonModal()">Đóng Lại</button></div>
         `;
         openCommonModal(html);
     }
-
-    function renderRoutesTable() {
-        let tbody = document.getElementById('routes-tbody'); tbody.innerHTML = '';
-        if(companyData.routes.length === 0) { addRouteRow(); } else { companyData.routes.forEach(rt => addRouteRow(rt)); }
+    function saveAcConfig(routeId, isMod) {
+        let rt = companyData.routes.find(r => r.id === routeId); if(!rt.config) rt.config = {};
+        rt.config.y = parseInt(document.getElementById('cfg-y').value)||0; rt.config.j = parseInt(document.getElementById('cfg-j').value)||0; rt.config.f = parseInt(document.getElementById('cfg-f').value)||0;
+        rt.config.cost = isMod ? document.getElementById('cfg-cost').value : '';
+        triggerSave(); closeCommonModal(); alert('Đã lưu dữ liệu Cấu Hình Tàu Bay thành công!');
     }
-    function addRouteRow(rt = {}) {
-        let tbody = document.getElementById('routes-tbody'); let tr = document.createElement('tr');
-        tr.dataset.id = rt.id || ('RT_'+Date.now());
-        
-        let acOpts = companyData.fleet.map(f => {
-            let mName = companyData.makers.find(m => m.id === f.maker)?.name || 'Hãng';
-            return `<option value="${f.id}" ${rt.aircraft === f.id ? 'selected' : ''}>${mName} ${f.model}</option>`;
-        }).join('');
 
-        tr.innerHTML = `
-            <td class="r-stt" style="text-align: center; font-weight: bold;"></td>
-            <td style="text-align:center;">
-                <button class="btn-main" style="padding: 6px 10px; font-size:12px; background:#10b981;" onclick="openRouteSelector(this)">Chọn Chặng</button>
-                <input type="hidden" class="r-froute-id" value="${rt.fRouteId || ''}">
-            </td>
-            <td><input type="text" class="r-route" value="${rt.route || ''}" readonly placeholder="Tự điền..." style="width: 100%; box-sizing: border-box; text-align: center; background: #f1f5f9; font-weight: bold; color: #0284c7;"></td>
-            <td><input type="text" class="r-segment" value="${rt.segment || ''}" readonly placeholder="Tự điền..." style="width: 100%; box-sizing: border-box; text-align: center; background: #f1f5f9; font-weight: bold; color: #10b981;"></td>
-            <td>
-                <div style="display:flex; gap:8px;">
-                    <select class="r-aircraft" onchange="triggerSave()" style="flex:1; padding:6px;"><option value="">-- Chọn Máy Bay --</option>${acOpts}</select>
-                    <button class="btn-main" style="padding: 6px 12px; background: #3b82f6;" onclick="showAircraftInfo(this.previousElementSibling.value, '${tr.dataset.id}')">🔍 Xem / Cấu hình</button>
-                </div>
-            </td>
-            <td><button class="btn-remove" onclick="if(confirm('Xóa chặng phân công?')) { this.closest('tr').remove(); triggerSave(); }">Xóa</button></td>
-        `;
-        tbody.appendChild(tr); document.querySelectorAll('#routes-tbody tr').forEach((r, i) => r.querySelector('.r-stt').innerText = i + 1);
+    function openRouteSelector(btnEle) {
+        currentActiveRowId = btnEle.closest('tr').dataset.id;
+        let html = `<h3>🗺️ Chọn Chặng Bay</h3><table style="width:100%; text-align:left;">`;
+        companyData.flightRoutes.forEach(fr => {
+            let hub = companyData.hubs.find(h => h.id === fr.hub); let dest = globalAirports.find(a => a.id === fr.dest);
+            if(hub && dest) { let hAp = globalAirports.find(a=>a.id===hub.airportId); html += `<tr><td style="padding:10px; border-bottom:1px solid #ccc;"><b>${hAp?.name}</b> ➔ <b>${dest.name}</b></td><td style="text-align:center;"><button class="btn-add" onclick="processFlightRouteAssign('${fr.id}')">Chọn</button></td></tr>`; }
+        });
+        html += `</table><button class="btn-remove" style="margin-top:15px;" onclick="closeCommonModal()">Đóng</button>`; openCommonModal(html);
+    }
+
+    function processFlightRouteAssign(fRouteId) {
+        let tr = document.querySelector(`#routes-tbody tr[data-id="${currentActiveRowId}"]`);
+        tr.querySelector('.r-froute-id').value = fRouteId;
+        let fr = companyData.flightRoutes.find(r => r.id === fRouteId); let hub = companyData.hubs.find(h => h.id === fr.hub); let dest = globalAirports.find(a => a.id === fr.dest); let hAp = globalAirports.find(a=>a.id===hub.airportId);
+        
+        let cId = hAp?.countryId; let country = companyData.countries.find(c=>c.id === cId); let countryCode = country ? country.code : "XX";
+        let hubIcao = hAp?.icao || "XXXX"; let destIcao = dest?.icao || "XXXX"; let segPrefix = (hubIcao.slice(-2) + destIcao.slice(-2)).toUpperCase();
+        
+        let maxRoute = 0, maxSeg = 0;
+        document.querySelectorAll('.r-route').forEach(inp => { if(inp.value.startsWith(countryCode+'-')) { let num = parseInt(inp.value.split('-')[1]); if(num > maxRoute) maxRoute = num; } });
+        document.querySelectorAll('.r-segment').forEach(inp => { if(inp.value.startsWith(segPrefix+'-')) { let num = parseInt(inp.value.split('-')[1]); if(num > maxSeg) maxSeg = num; } });
+        
+        tr.querySelector('.r-route').value = countryCode + '-' + (maxRoute + 1).toString().padStart(3,'0');
+        tr.querySelector('.r-segment').value = segPrefix + '-' + (maxSeg + 1).toString().padStart(3,'0');
+        closeCommonModal(); triggerSave();
+    }
+
+    function formatNumber(num) { return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); }
+
+    // --- CẤT CÁNH ---
+    function renderTakeoffTable() {
+        let tbody = document.getElementById('takeoff-tbody'); tbody.innerHTML = '';
+        companyData.routes.forEach((rt, i) => {
+            if(!rt.route || !rt.aircraft) return;
+            let ac = companyData.fleet.find(f => f.id === rt.aircraft); let mk = companyData.makers.find(m => m.id === ac?.maker);
+            tbody.innerHTML += `<tr><td style="text-align:center;">${i+1}</td><td style="text-align:center;"><input type="checkbox" class="chk-takeoff" data-id="${rt.id}" style="width:20px; height:20px;"></td><td style="text-align:center; font-weight:bold; color:#10b981;">${rt.segment}</td><td style="text-align:center;">${mk?.name||''} ${ac?.model||''}</td><td style="text-align:center;"><button class="btn-main" style="background:#f59e0b;" onclick="executeTakeoff('${rt.id}')">🚀 Cất Cánh</button></td></tr>`;
+        });
+    }
+
+    function executeTakeoff(routeId) {
+        let rt = companyData.routes.find(r => r.id === routeId); let ac = companyData.fleet.find(f => f.id === rt.aircraft);
+        let frId = rt.fRouteId; let dem = companyData.demands.find(d => d.frId === frId);
+        if(!ac || !dem || !dem.distance) return alert("Thiếu dữ liệu khoảng cách hoặc máy bay để tính toán!");
+
+        let dist = parseCur(dem.distance); let speed = parseCur(ac.speed) || 1;
+        let fuelCons = parseCur(ac.fuelcons); let co2Emis = parseCur(ac.co2emis);
+        let maintHours = parseCur(ac.maintcheck); let acheckCost = parseCur(ac.acheck);
+        
+        // Cấu hình khách thực tế
+        let baseY = parseCur(ac.pax); let cY = rt.config?.y !== undefined ? rt.config.y : baseY; let cJ = rt.config?.j || 0; let cF = rt.config?.f || 0;
+        
+        // Prices
+        let pFuel = parseCur(companyData.prices?.fuel); let pCO2 = parseCur(companyData.prices?.co2);
+        let pY = parseCur(companyData.prices?.y); let pJ = parseCur(companyData.prices?.j); let pF = parseCur(companyData.prices?.f);
+
+        // Calculate Cost & Rev
+        let flightTime = dist / speed;
+        let totalFuel = (dist * fuelCons); let totalCO2 = (dist * co2Emis);
+        let fuelCost = Math.round((totalFuel / 1000) * pFuel); let co2Cost = Math.round((totalCO2 / 1000) * pCO2);
+        let rev = (cY * pY) + (cJ * pJ) + (cF * pF);
+        
+        let maintCost = Math.round(0.15 * Math.max(0, rev - fuelCost - co2Cost));
+        let flightsToAcheck = Math.ceil((maintHours - 50) / flightTime);
+        let acheckFee = (flightsToAcheck > 0) ? Math.round(acheckCost / flightsToAcheck) : acheckCost;
+        
+        let profit = rev - fuelCost - co2Cost - maintCost - acheckFee;
+
+        // Save history
+        companyData.history.push({ id: 'HS_'+Date.now(), acId: ac.id, routeId: routeId, date: new Date().toLocaleDateString('vi-VN'), revenue: rev, fuel: fuelCost, co2: co2Cost, maint: maintCost, acheckCost: acheckFee, profit: profit });
+        triggerSave();
+
+        let html = `<h2 style="color:#10b981; margin-top:0;">🚀 BÁO CÁO CHUYẾN BAY THÀNH CÔNG</h2>
+        <div style="font-size:15px; line-height:1.8;">
+            <p><b>Hành khách:</b> Y: ${cY} | J: ${cJ} | F: ${cF}</p>
+            <p><b>Doanh thu vé bán:</b> <span style="color:#10b981; font-weight:bold;">${formatNumber(rev)} $</span></p>
+            <p><b>Chi phí Nhiên liệu (${formatNumber(totalFuel)} Lbs):</b> -${formatNumber(fuelCost)} $</p>
+            <p><b>Chi phí CO2 (${formatNumber(totalCO2)} kg):</b> -${formatNumber(co2Cost)} $</p>
+            <p><b>Phí bảo trì hao mòn (15%):</b> -${formatNumber(maintCost)} $</p>
+            <p><b>Quỹ dự phòng A-Check:</b> -${formatNumber(acheckFee)} $</p>
+            <hr><h3 style="color:${profit>=0 ? '#10b981' : '#ef4444'}">LỢI NHUẬN THUẦN: ${formatNumber(profit)} $</h3>
+        </div><div style="text-align:right;"><button class="btn-main" onclick="closeCommonModal()">Đóng</button></div>`;
+        openCommonModal(html);
     }
     loadAuth();
 </script>
