@@ -240,8 +240,22 @@
         <div id="module-fleet" class="module">
             <h2 class="module-title">Thông Tin Cấu Hình Máy Bay</h2>
             <div style="text-align: right; margin-bottom: 15px;"><button class="btn-add" onclick="addFleetRow()">+ Nhập Máy Bay Mới</button></div>
-            <div style="overflow-x: auto;"><table style="min-width: 1600px;">
-                <thead><tr><th style="width:4%;">STT</th><th style="width:10%; cursor:pointer; color:#0284c7; text-decoration:underline;" onclick="openMakersManager()">Hãng máy bay ⚙️</th><th style="width:10%;">Dòng máy bay</th><th style="width:8%;">Khoảng cách TĐ</th><th style="width:8%;">Vận tốc TĐ</th><th style="width:7%;">Số HK (Y)</th><th style="width:10%;">Phi hành đoàn</th><th style="width:9%;">A-check ($)</th><th style="width:8%;">Maint (Giờ)</th><th style="width:8%;">Tiêu hao NL</th><th style="width:8%;">Phát thải CO2</th><th style="width:8%;">Giá mua ($)</th><th style="width:7%;">Vận tốc bay</th><th style="width:5%;">Thao Tác</th></tr></thead>
+            <div style="overflow-x: auto;"><table style="min-width: 1500px;">
+                <thead><tr>
+                    <th style="width:4%;">STT</th>
+                    <th style="width:10%; cursor:pointer; color:#0284c7; text-decoration:underline;" onclick="openMakersManager()">Hãng máy bay ⚙️</th>
+                    <th style="width:10%;">Dòng máy bay</th>
+                    <th style="width:8%;">Khoảng cách TĐ</th>
+                    <th style="width:9%;">Vận tốc TĐ (km/h)</th>
+                    <th style="width:7%;">Số HK (Y)</th>
+                    <th style="width:10%;">Phi hành đoàn</th>
+                    <th style="width:9%;">A-check ($)</th>
+                    <th style="width:8%;">Maint (Giờ)</th>
+                    <th style="width:9%;">Tiêu hao NL</th>
+                    <th style="width:9%;">Phát thải CO2</th>
+                    <th style="width:8%;">Giá mua ($)</th>
+                    <th style="width:5%;">Thao Tác</th>
+                </tr></thead>
                 <tbody id="fleet-tbody"></tbody>
             </table></div>
         </div>
@@ -371,7 +385,7 @@
         let newFleet = [];
         document.querySelectorAll('#fleet-tbody tr').forEach(tr => {
             let maker = tr.querySelector('.f-maker').value; let model = tr.querySelector('.f-model').value.trim();
-            if (maker || model) { newFleet.push({ id: tr.dataset.id, maker: maker, model: model, range: tr.querySelector('.f-range').value.trim(), maxspeed: tr.querySelector('.f-maxspeed').value.trim(), pax: tr.querySelector('.f-pax').value.trim(), crew_str: tr.querySelector('.f-crew').value, crew_data: JSON.parse(tr.querySelector('.f-crew-data').value || '{}'), acheck: tr.querySelector('.f-acheck').value.trim(), maintcheck: tr.querySelector('.f-maintcheck').value.trim(), fuelcons: tr.querySelector('.f-fuelcons').value.trim(), co2emis: tr.querySelector('.f-co2emis').value.trim(), price: tr.querySelector('.f-price').value.trim(), speed: tr.querySelector('.f-speed').value.trim() }); }
+            if (maker || model) { newFleet.push({ id: tr.dataset.id, maker: maker, model: model, range: tr.querySelector('.f-range').value.trim(), maxspeed: tr.querySelector('.f-maxspeed').value.trim(), pax: tr.querySelector('.f-pax').value.trim(), crew_str: tr.querySelector('.f-crew').value, crew_data: JSON.parse(tr.querySelector('.f-crew-data').value || '{}'), acheck: tr.querySelector('.f-acheck').value.trim(), maintcheck: tr.querySelector('.f-maintcheck').value.trim(), fuelcons: tr.querySelector('.f-fuelcons').value.trim(), co2emis: tr.querySelector('.f-co2emis').value.trim(), price: tr.querySelector('.f-price').value.trim() }); }
         }); companyData.fleet = newFleet;
 
         let newAirports = [];
@@ -413,158 +427,38 @@
         } catch(e) { setSyncStatus("(Lỗi kết nối)", "#ef4444"); }
     }
 
-    // --- QUỐC GIA ---
-    function openCountryManager() {
-        let html = `<h3>🌍 Danh Sách Quốc Gia</h3><div style="display:flex; gap:5px; margin-bottom:15px;">
-            <input type="text" id="new-c-en" placeholder="Tên TA (Bắt buộc)" style="flex:2; padding:8px;">
-            <input type="text" id="new-c-vi" placeholder="Tên QG" style="flex:2; padding:8px;">
-            <input type="text" id="new-c-code" placeholder="Mã QG (2 Ký tự)" maxlength="2" style="flex:1; padding:8px; text-transform:uppercase;">
-            <button class="btn-add" onclick="addCountry()">Thêm</button></div>
-        <table style="width:100%; border-collapse:collapse;"><tr style="background:#f1f5f9;"><th>STT</th><th>English</th><th>Tên QG</th><th>Mã</th><th>Xóa</th></tr><tbody id="countries-tbody"></tbody></table><div style="text-align:right; margin-top:15px;"><button class="btn-main" onclick="closeCommonModal(); renderAirportsTable(); triggerSave();">Đóng</button></div>`;
-        openCommonModal(html); renderCountriesList();
-    }
-    function renderCountriesList() {
-        let tb = document.getElementById('countries-tbody'); tb.innerHTML = '';
-        companyData.countries.forEach((c, i) => { tb.innerHTML += `<tr><td style="text-align:center">${i+1}</td><td>${c.en}</td><td>${c.vi}</td><td style="text-align:center">${c.code}</td><td style="text-align:center"><button class="btn-remove" onclick="removeCountry('${c.id}')">X</button></td></tr>`; });
-    }
-    function addCountry() {
-        let en = document.getElementById('new-c-en').value.trim(); let vi = document.getElementById('new-c-vi').value.trim(); let code = document.getElementById('new-c-code').value.trim().toUpperCase();
-        if(!en) return alert("Tên tiếng Anh là bắt buộc!");
-        companyData.countries.push({id: 'CO_'+Date.now(), en, vi, code}); renderCountriesList();
-    }
-    function removeCountry(id) { companyData.countries = companyData.countries.filter(c => c.id !== id); renderCountriesList(); }
+    function triggerSave() { clearTimeout(saveTimer); setSyncStatus("(Chờ lưu...)", "#f59e0b"); saveTimer = setTimeout(saveCompanyData, 1500); }
+    function openCommonModal(html) { document.getElementById('common-modal-content').innerHTML = html; document.getElementById('common-modal').style.display = 'flex'; }
+    function closeCommonModal() { document.getElementById('common-modal').style.display = 'none'; }
+    function parseCur(str) { return parseInt((str||"0").toString().replace(/\D/g, '')) || 0; }
 
-    // --- SÂN BAY & HUB ---
-    function renderAirportsTable() {
-        let tbody = document.getElementById('airports-tbody'); tbody.innerHTML = '';
-        if(globalAirports.length === 0) { addAirportRow(); } else { globalAirports.forEach(ap => addAirportRow(ap)); }
+    function renderFleetTable() {
+        let tbody = document.getElementById('fleet-tbody'); tbody.innerHTML = '';
+        if(companyData.fleet.length === 0) { addFleetRow(); } else { companyData.fleet.forEach(ac => addFleetRow(ac)); }
+        updateDashboardCount();
     }
-    function addAirportRow(ap) {
-        if (!ap || ap instanceof Event) ap = {};
-        let tbody = document.getElementById('airports-tbody'); let tr = document.createElement('tr');
-        tr.dataset.id = ap.id || ('AP_'+Date.now()+Math.random());
-        let countryOpts = companyData.countries.map(c => `<option value="${c.id}" ${ap.countryId===c.id?'selected':''}>${c.vi||c.en} (${c.code})</option>`).join('');
+    function addFleetRow(ac) {
+        if (!ac || ac instanceof Event) ac = {};
+        let tbody = document.getElementById('fleet-tbody'); let tr = document.createElement('tr');
+        tr.dataset.id = ac.id || ('AC_'+Date.now());
+        let makerOpts = companyData.makers.map(m => `<option value="${m.id}" ${ac.maker===m.id?'selected':''}>${m.name}</option>`).join('');
         tr.innerHTML = `
-            <td class="a-stt" style="text-align: center; font-weight: bold;"></td>
-            <td><select class="a-country" onchange="triggerSave()" style="width:100%; padding:6px;"><option value="">-- Chọn QG --</option>${countryOpts}</select></td>
-            <td><input type="text" class="a-name" value="${ap.name || ''}" placeholder="Tên Sân Bay" style="width: 100%; box-sizing: border-box;" oninput="triggerSave()"></td>
-            <td><input type="text" class="a-icao" value="${ap.icao || ''}" placeholder="ICAO" maxlength="4" style="width: 100%; box-sizing: border-box; text-align: center;" oninput="this.value = this.value.toUpperCase(); triggerSave()"></td>
-            <td><input type="text" class="a-iata" value="${ap.iata || ''}" placeholder="IATA" maxlength="3" style="width: 100%; box-sizing: border-box; text-align: center;" oninput="this.value = this.value.toUpperCase(); triggerSave()"></td>
-            <td><button class="btn-remove" onclick="if(confirm('Xóa?')){ this.closest('tr').remove(); triggerSave(); }">Xóa</button></td>
+            <td class="f-stt" style="text-align: center; font-weight: bold;"></td>
+            <td><select class="f-maker" style="width: 100%; box-sizing: border-box;" onchange="triggerSave()"><option value="">-- Hãng --</option>${makerOpts}</select></td>
+            <td><input type="text" class="f-model" value="${ac.model || ''}" placeholder="Dòng..." style="width: 100%; box-sizing: border-box;" oninput="triggerSave()"></td>
+            <td><input type="text" class="f-range" value="${ac.range || ''}" placeholder="km" style="width: 100%; box-sizing: border-box; text-align: center;" oninput="formatCurrency(this); triggerSave()"></td>
+            <td><input type="text" class="f-maxspeed" value="${ac.maxspeed || ''}" placeholder="km/h" style="width: 100%; box-sizing: border-box; text-align: center;" oninput="formatCurrency(this); triggerSave()"></td>
+            <td><input type="text" class="f-pax" value="${ac.pax || ''}" placeholder="Ghế Y" style="width: 100%; box-sizing: border-box; text-align: center; color:#eab308; font-weight:bold;" oninput="formatCurrency(this); triggerSave()"></td>
+            <td><input type="text" class="f-crew" value="${ac.crew_str || ''}" readonly onclick="openCrewManager(this)" placeholder="Nhấn nhập..." style="width: 100%; box-sizing: border-box; text-align: center; cursor:pointer; font-size:14px; background:#f8fafc;"><input type="hidden" class="f-crew-data" value='${JSON.stringify(ac.crew_data||{})}'></td>
+            <td><input type="text" class="f-acheck" value="${ac.acheck || ''}" placeholder="$" style="width: 100%; box-sizing: border-box; text-align: center;" oninput="formatCurrency(this); triggerSave()"></td>
+            <td><input type="text" class="f-maintcheck" value="${ac.maintcheck || ''}" placeholder="Giờ" style="width: 100%; box-sizing: border-box; text-align: center;" oninput="formatCurrency(this); triggerSave()"></td>
+            <td><input type="text" class="f-fuelcons" value="${ac.fuelcons || ''}" placeholder="Lbs/km" style="width: 100%; box-sizing: border-box; text-align: center;" oninput="triggerSave()"></td>
+            <td><input type="text" class="f-co2emis" value="${ac.co2emis || ''}" placeholder="kg/km" style="width: 100%; box-sizing: border-box; text-align: center;" oninput="triggerSave()"></td>
+            <td><input type="text" class="f-price" value="${ac.price || ''}" placeholder="$" style="width: 100%; box-sizing: border-box; text-align: center;" oninput="formatCurrency(this); triggerSave()"></td>
+            <td><button class="btn-remove" onclick="if(confirm('Xóa tàu bay?')) { this.closest('tr').remove(); triggerSave(); }">Bán</button></td>
         `;
-        tbody.appendChild(tr); document.querySelectorAll('#airports-tbody tr').forEach((r, i) => r.querySelector('.a-stt').innerText = i + 1);
+        tbody.appendChild(tr); document.querySelectorAll('#fleet-tbody tr').forEach((r, i) => r.querySelector('.f-stt').innerText = i + 1);
     }
-
-    function autoFillHub(sel) {
-        let tr = sel.closest('tr'); let ap = globalAirports.find(a => a.id === sel.value);
-        if(ap) { let country = companyData.countries.find(c => c.id === ap.countryId); tr.querySelector('.h-country').value = country ? `${country.en}/${country.code}` : "---"; tr.querySelector('.h-code').value = `${ap.icao||'XXXX'}/${ap.iata||'XXX'}`; }
-        triggerSave();
-    }
-    function handleHubBaseCheck(cb) { if(cb.checked) { document.querySelectorAll('.h-base').forEach(box => { if(box !== cb) box.checked = false; }); } triggerSave(); }
-    function renderHubsTable() {
-        let tbody = document.getElementById('hubs-tbody'); tbody.innerHTML = '';
-        if(companyData.hubs.length === 0) { addHubRow(); } else { companyData.hubs.forEach(hb => addHubRow(hb)); }
-    }
-    function addHubRow(hb) {
-        if (!hb || hb instanceof Event) hb = {};
-        let tbody = document.getElementById('hubs-tbody'); let tr = document.createElement('tr');
-        tr.dataset.id = hb.id || ('HB_'+Date.now());
-        let apOpts = globalAirports.map(a => `<option value="${a.id}" ${hb.airportId===a.id?'selected':''}>${a.name}</option>`).join('');
-        
-        let cName = "---", codeName = "---";
-        if(hb.airportId) { let ap = globalAirports.find(a => a.id === hb.airportId); if(ap) { let country = companyData.countries.find(c => c.id === ap.countryId); cName = country ? `${country.en}/${country.code}` : "---"; codeName = `${ap.icao||'XXXX'}/${ap.iata||'XXX'}`; } }
-        tr.innerHTML = `
-            <td class="h-stt" style="text-align: center; font-weight: bold;"></td>
-            <td><select class="h-airport" onchange="autoFillHub(this)" style="width:100%; padding:6px;"><option value="">-- Chọn Sân Bay --</option>${apOpts}</select></td>
-            <td><input type="text" class="h-country" value="${cName}" readonly style="width: 100%; box-sizing: border-box; text-align:center; background:#f1f5f9;"></td>
-            <td><input type="text" class="h-code" value="${codeName}" readonly style="width: 100%; box-sizing: border-box; text-align: center; background:#f1f5f9; font-weight:bold;"></td>
-            <td style="text-align:center;"><input type="checkbox" class="h-base" ${hb.base ? 'checked' : ''} onchange="handleHubBaseCheck(this)" style="width:20px; height:20px; cursor:pointer;"></td>
-            <td><button class="btn-remove" onclick="if(confirm('Xóa HUB?')){ this.closest('tr').remove(); triggerSave(); }">Xóa</button></td>
-        `;
-        tbody.appendChild(tr); document.querySelectorAll('#hubs-tbody tr').forEach((r, i) => r.querySelector('.h-stt').innerText = i + 1);
-    }
-
-    // --- CẤU HÌNH TUYẾN & NHU CẦU ---
-    function renderFlightRoutesTable() {
-        let tbody = document.getElementById('flight-routes-tbody'); tbody.innerHTML = '';
-        if(companyData.flightRoutes.length === 0) { addFlightRouteRow(); } else { companyData.flightRoutes.forEach(fr => addFlightRouteRow(fr)); }
-    }
-    function addFlightRouteRow(fr) {
-        if (!fr || fr instanceof Event) fr = {};
-        let tbody = document.getElementById('flight-routes-tbody'); let tr = document.createElement('tr');
-        tr.dataset.id = fr.id || ('FR_'+Date.now());
-        let hubOpts = companyData.hubs.map(h => { let ap = globalAirports.find(a=>a.id===h.airportId); return `<option value="${h.id}" ${fr.hub===h.id?'selected':''}>${ap?.name||'HUB'} (${ap?.icao||'---'})</option>`; }).join('');
-        let destOpts = globalAirports.map(a => `<option value="${a.id}" ${fr.dest===a.id?'selected':''}>${a.name} (${a.icao||'---'})</option>`).join('');
-        tr.innerHTML = `
-            <td class="fr-stt" style="text-align: center; font-weight: bold;"></td>
-            <td><select class="fr-hub" onchange="triggerSave()" style="width: 100%; padding:6px;"><option value="">-- Chọn HUB --</option>${hubOpts}</select></td>
-            <td><select class="fr-dest" onchange="triggerSave()" style="width: 100%; padding:6px;"><option value="">-- Chọn Sân Bay Đến --</option>${destOpts}</select></td>
-            <td><button class="btn-main" style="background:#3b82f6; padding:6px;" onclick="showFlightRouteInfo('${tr.dataset.id}')">Chi Tiết / Giá</button> <button class="btn-remove" onclick="if(confirm('Xóa?')){ this.closest('tr').remove(); triggerSave(); }">Xóa</button></td>
-        `;
-        tbody.appendChild(tr); document.querySelectorAll('#flight-routes-tbody tr').forEach((r, i) => r.querySelector('.fr-stt').innerText = i + 1);
-    }
-    
-    function showFlightRouteInfo(frId) {
-        let fr = companyData.flightRoutes.find(r => r.id === frId); if(!fr) return;
-        let hub = companyData.hubs.find(h=>h.id===fr.hub); let hAp = globalAirports.find(a=>a.id===hub?.airportId); let dAp = globalAirports.find(a=>a.id===fr.dest);
-        let title = `${hAp?.name||'HUB'} ➔ ${dAp?.name||'Đích'}`;
-        
-        let assigned = companyData.routes.filter(r => r.fRouteId === frId && r.aircraft);
-        let dem = companyData.demands.find(d => d.frId === frId) || {distance:0, y:0, j:0, f:0};
-        
-        let acHtml = assigned.map(r => { let ac = companyData.fleet.find(f => f.id === r.aircraft); let cY = r.config?.y!==undefined ? r.config.y : parseCur(ac?.pax); let cJ = r.config?.j||0; let cF = r.config?.f||0; return `<li>Tàu bay [Mã: ${r.route}]: ${ac?.model||'Unknown'} (Y:${cY} J:${cJ} F:${cF})</li>`; }).join('');
-        
-        let sumY = 0, sumJ = 0, sumF = 0;
-        assigned.forEach(r => { let ac = companyData.fleet.find(f => f.id === r.aircraft); sumY += r.config?.y!==undefined ? r.config.y : parseCur(ac?.pax); sumJ += r.config?.j||0; sumF += r.config?.f||0; });
-
-        let pY = fr.prices?.y || "0"; let pJ = fr.prices?.j || "0"; let pF = fr.prices?.f || "0";
-
-        let html = `<h3>🗺️ ${title}</h3>
-            <p><b>Khoảng cách:</b> ${formatNumber(dem.distance)} km</p>
-            <p><b>Nhu cầu:</b> Y: ${formatNumber(dem.y)} | J: ${formatNumber(dem.j)} | F: ${formatNumber(dem.f)}</p><hr>
-            <p style="font-weight:bold; color:#0284c7;">💰 Cấu Hình Giá Vé Chuyến Bay ($)</p>
-            <div style="display:flex; gap:10px; margin-bottom:15px;">
-                <label>Hạng Y: <input type="text" id="fr-price-y" value="${pY}" oninput="formatCurrency(this)" style="width:70px; padding:5px; text-align:center; font-weight:bold; color:#eab308; border:1px solid #cbd5e1;"></label>
-                <label>Hạng J: <input type="text" id="fr-price-j" value="${pJ}" oninput="formatCurrency(this)" style="width:70px; padding:5px; text-align:center; font-weight:bold; color:#3b82f6; border:1px solid #cbd5e1;"></label>
-                <label>Hạng F: <input type="text" id="fr-price-f" value="${pF}" oninput="formatCurrency(this)" style="width:70px; padding:5px; text-align:center; font-weight:bold; color:#a855f7; border:1px solid #cbd5e1;"></label>
-                <button class="btn-add" onclick="saveFlightRoutePrices('${frId}')">Lưu Giá Vé</button>
-            </div><hr>
-            <p><b>Số tàu bay đang khai thác:</b> ${assigned.length}</p><ul>${acHtml || '<li>Chưa có tàu bay nào</li>'}</ul><hr><p><b>Đáp ứng nhu cầu:</b> Y: ${sumY}/${dem.y} | J: ${sumJ}/${dem.j} | F: ${sumF}/${dem.f}</p>
-            <div style="text-align:right;"><button class="btn-remove" onclick="closeCommonModal()">Đóng</button></div>`;
-        openCommonModal(html);
-    }
-
-    function saveFlightRoutePrices(frId) { let fr = companyData.flightRoutes.find(r => r.id === frId); if(fr) { fr.prices = { y: document.getElementById('fr-price-y').value || "0", j: document.getElementById('fr-price-j').value || "0", f: document.getElementById('fr-price-f').value || "0" }; triggerSave(); alert("Đã lưu giá vé cho tuyến bay!"); } }
-
-    function renderDemandsTable() {
-        let tbody = document.getElementById('demands-tbody'); tbody.innerHTML = '';
-        companyData.flightRoutes.forEach((fr, i) => {
-            let hub = companyData.hubs.find(h=>h.id===fr.hub); let hAp = globalAirports.find(a=>a.id===hub?.airportId); let dAp = globalAirports.find(a=>a.id===fr.dest);
-            let name = `${hAp?.name||'HUB'} ➔ ${dAp?.name||'Đích'}`; let d = companyData.demands.find(x => x.frId === fr.id) || {distance:"", y:"", j:"", f:""};
-            tbody.innerHTML += `<tr data-frid="${fr.id}">
-                <td style="text-align:center;">${i+1}</td><td style="font-weight:bold;">${name}</td>
-                <td><input type="text" class="d-dist" value="${d.distance}" placeholder="km" oninput="formatCurrency(this); triggerSave()" style="width:100%; text-align:center;"></td>
-                <td><input type="text" class="d-y" value="${d.y}" oninput="formatCurrency(this); triggerSave()" style="width:100%; text-align:center; color:#eab308; font-weight:bold;"></td>
-                <td><input type="text" class="d-j" value="${d.j}" oninput="formatCurrency(this); triggerSave()" style="width:100%; text-align:center; color:#3b82f6; font-weight:bold;"></td>
-                <td><input type="text" class="d-f" value="${d.f}" oninput="formatCurrency(this); triggerSave()" style="width:100%; text-align:center; color:#a855f7; font-weight:bold;"></td>
-            </tr>`;
-        });
-    }
-
-    // --- MÁY BAY ---
-    function openMakersManager() {
-        let html = `<h3>🏢 Hãng Máy Bay</h3><div style="display:flex; gap:10px; margin-bottom:15px;"><input type="text" id="new-maker-name" style="flex:1; padding:8px;"><button class="btn-add" onclick="addMaker()">Thêm</button></div><table style="width:100%;"><tbody id="makers-tbody"></tbody></table><div style="text-align:right;"><button class="btn-main" onclick="closeCommonModal(); renderFleetTable();">Đóng</button></div>`;
-        openCommonModal(html); renderMakersList();
-    }
-    function renderMakersList() { let tb = document.getElementById('makers-tbody'); tb.innerHTML = companyData.makers.map((m,i)=>`<tr><td>${i+1}</td><td>${m.name}</td><td><button class="btn-remove" onclick="companyData.makers=companyData.makers.filter(x=>x.id!=='${m.id}'); renderMakersList()">X</button></td></tr>`).join(''); }
-    function addMaker() { let n = document.getElementById('new-maker-name').value; if(n){ companyData.makers.push({id:'MK_'+Date.now(), name:n}); renderMakersList(); } }
-
-    function openCrewManager(inputEle) {
-        currentActiveInput = inputEle; let data = JSON.parse(inputEle.nextElementSibling.value || '{"p":0,"c":0,"e":0,"t":0}');
-        let html = `<h3>Phi Hành Đoàn</h3><label style="display:block; margin-bottom:10px;">Pilots: <input type="number" id="c-p" value="${data.p||0}"></label><label style="display:block; margin-bottom:10px;">Crew: <input type="number" id="c-c" value="${data.c||0}"></label><label style="display:block; margin-bottom:10px;">Engineers: <input type="number" id="c-e" value="${data.e||0}"></label><label style="display:block; margin-bottom:10px;">Tech: <input type="number" id="c-t" value="${data.t||0}"></label><br><button class="btn-main" onclick="saveCrew()">Lưu</button> <button class="btn-remove" onclick="closeCommonModal()">Hủy</button>`;
-        openCommonModal(html);
-    }
-    function saveCrew() { let p = document.getElementById('c-p').value||0, c=document.getElementById('c-c').value||0, e=document.getElementById('c-e').value||0, t=document.getElementById('c-t').value||0; if(currentActiveInput){ currentActiveInput.value=`P:${p}, C:${c}, E:${e}, T:${t}`; currentActiveInput.nextElementSibling.value=JSON.stringify({p,c,e,t}); triggerSave(); } closeCommonModal(); }
 
     function showAircraftInfo(acId, routeId) {
         let ac = companyData.fleet.find(f => f.id === acId); if(!ac) return; let rt = companyData.routes.find(r => r.id === routeId) || {};
@@ -576,7 +470,7 @@
 
         let html = `
             <h2 style="color:#0284c7; margin-top:0;">📄 CHI TIẾT MÁY BAY: ${makerName} ${ac.model}</h2>
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; font-size:14px;"><div><b>Tầm bay:</b> ${ac.range||0} km</div><div><b>Tốc độ TT:</b> ${ac.speed||0} km/h</div><div><b>Maint Check:</b> ${ac.maintcheck||0} Giờ</div><div><b>Giá A-Check:</b> ${ac.acheck||0} $</div></div>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; font-size:14px;"><div><b>Tầm bay:</b> ${ac.range||0} km</div><div><b>Maint Check:</b> ${ac.maintcheck||0} Giờ</div><div><b>Giá A-Check:</b> ${ac.acheck||0} $</div></div>
             <button class="btn-main" style="margin-top:15px; width:100%;" onclick="document.getElementById('cfg-toggle').style.display='block'">⚙️ Sửa Cấu Hình Ghế</button>
             <div id="cfg-toggle" style="display:none; border:2px solid #e2e8f0; background:#f8fafc; padding:15px; border-radius:8px; margin-top:10px;">
                 <div style="display:flex; gap:10px; margin-bottom:10px;"><label>Y: <input type="number" id="cfg-y" value="${cY}" style="width:60px;"></label><label>J: <input type="number" id="cfg-j" value="${cJ}" style="width:60px;"></label><label>F: <input type="number" id="cfg-f" value="${cF}" style="width:60px;"></label></div>
@@ -686,21 +580,64 @@
         let frId = rt.fRouteId; let dem = companyData.demands.find(d => d.frId === frId); let fr = companyData.flightRoutes.find(r => r.id === frId);
         if(!ac || !dem || !dem.distance || !fr) return alert("Thiếu dữ liệu khoảng cách hoặc máy bay để tính toán!");
 
-        let dist = parseCur(dem.distance); let speed = parseCur(ac.speed) || 1;
+        let baseY = parseCur(ac.pax); let cY = rt.config?.y !== undefined ? rt.config.y : baseY; let cJ = rt.config?.j || 0; let cF = rt.config?.f || 0;
+        
+        let actY = Math.min(parseCur(dem.y), cY);
+        let actJ = Math.min(parseCur(dem.j), cJ);
+        let actF = Math.min(parseCur(dem.f), cF);
+        
+        let html = `
+            <h3 style="color:#f59e0b; margin-top:0;">🛫 Nhập Khách Cho Tàu Bay</h3>
+            <p style="margin-bottom:5px;"><b>Chặng:</b> ${rt.segment} | <b>Khoảng cách:</b> ${formatNumber(dem.distance)} km</p>
+            <p style="color:#64748b; font-size:14px; margin-bottom:15px;">Mặc định đã lấy tối đa theo nhu cầu tuyến bay hoặc giới hạn ghế trên máy bay. Bạn có thể chỉnh sửa lại.</p>
+            <div style="display:flex; gap:10px; margin-bottom:20px; align-items:center;">
+                <label>Khách Y (Max ${cY}): <input type="number" id="tk-y" value="${actY}" max="${cY}" style="width:70px; padding:5px; border:1px solid #cbd5e1; color:#eab308; font-weight:bold;"></label>
+                <label>Khách J (Max ${cJ}): <input type="number" id="tk-j" value="${actJ}" max="${cJ}" style="width:70px; padding:5px; border:1px solid #cbd5e1; color:#3b82f6; font-weight:bold;"></label>
+                <label>Khách F (Max ${cF}): <input type="number" id="tk-f" value="${actF}" max="${cF}" style="width:70px; padding:5px; border:1px solid #cbd5e1; color:#a855f7; font-weight:bold;"></label>
+            </div>
+            <div style="text-align:right;">
+                <button class="btn-main" style="background:#10b981;" onclick="processTakeoff('${routeId}', ${cY}, ${cJ}, ${cF})">🚀 Xác Nhận Cất Cánh</button>
+                <button class="btn-remove" onclick="closeCommonModal()">Hủy</button>
+            </div>
+        `;
+        openCommonModal(html);
+    }
+
+    function processTakeoff(routeId, maxcY, maxcJ, maxcF) {
+        let actY = Math.min(parseCur(document.getElementById('tk-y').value), maxcY);
+        let actJ = Math.min(parseCur(document.getElementById('tk-j').value), maxcJ);
+        let actF = Math.min(parseCur(document.getElementById('tk-f').value), maxcF);
+
+        let rt = companyData.routes.find(r => r.id === routeId); let ac = companyData.fleet.find(f => f.id === rt.aircraft);
+        let frId = rt.fRouteId; let dem = companyData.demands.find(d => d.frId === frId); let fr = companyData.flightRoutes.find(r => r.id === frId);
+
+        let dist = parseCur(dem.distance); let speed = parseCur(ac.maxspeed) || 1;
         let fuelCons = parseCur(ac.fuelcons); let co2Emis = parseCur(ac.co2emis);
         let maintHours = parseCur(ac.maintcheck); let acheckCost = parseCur(ac.acheck);
-        let baseY = parseCur(ac.pax); let cY = rt.config?.y !== undefined ? rt.config.y : baseY; let cJ = rt.config?.j || 0; let cF = rt.config?.f || 0;
         
         let pFuel = parseCur(companyData.prices?.fuel); let pCO2 = parseCur(companyData.prices?.co2);
         let pY = parseCur(fr.prices?.y); let pJ = parseCur(fr.prices?.j); let pF = parseCur(fr.prices?.f);
 
-        let flightTime = dist / speed; let totalFuel = (dist * fuelCons); let totalCO2 = (dist * co2Emis);
-        let fuelCost = Math.round((totalFuel / 1000) * pFuel); let co2Cost = Math.round((totalCO2 / 1000) * pCO2);
-        let rev = (cY * pY) + (cJ * pJ) + (cF * pF);
+        // 1. Tính Giờ bay & Nhiên liệu
+        let flightTime = Math.ceil(dist / speed); // Làm tròn lên theo yêu cầu
+        let totalPax = actY + actJ + actF;
         
-        let maintCost = Math.round(0.15 * Math.max(0, rev - fuelCost - co2Cost));
-        let flightsToAcheck = Math.ceil((maintHours - 50) / flightTime);
-        let acheckFee = (flightsToAcheck > 0) ? Math.round(acheckCost / flightsToAcheck) : acheckCost;
+        let totalFuel = (dist * fuelCons); 
+        // 2. CÔNG THỨC CO2 MỚI: CO2 * Tổng khách * Khoảng cách
+        let totalCO2 = (co2Emis * totalPax * dist);
+        
+        let fuelCost = Math.round((totalFuel / 1000) * pFuel); 
+        let co2Cost = Math.round((totalCO2 / 1000) * pCO2);
+        let rev = (actY * pY) + (actJ * pJ) + (actF * pF);
+        
+        // 3. CÔNG THỨC BẢO TRÌ: 15% * (Giá vé - (Tiền Nhiên liệu + CO2))
+        let maintCost = Math.round(0.15 * (rev - (fuelCost + co2Cost)));
+        if (maintCost < 0) maintCost = 0; // Tránh trường hợp tiền âm làm tăng lãi
+        
+        // 4. CÔNG THỨC A-CHECK: Giá A-Check / ((Maint Hours - 50) / Flight Time làm tròn lên)
+        let acheckDenom = (maintHours - 50) / flightTime;
+        let acheckFee = acheckDenom > 0 ? Math.round(acheckCost / acheckDenom) : acheckCost;
+        
         let profit = rev - fuelCost - co2Cost - maintCost - acheckFee;
 
         companyData.history.push({ id: 'HS_'+Date.now(), acId: ac.id, routeId: routeId, date: new Date().toLocaleDateString('vi-VN'), revenue: rev, fuel: fuelCost, co2: co2Cost, maint: maintCost, acheckCost: acheckFee, profit: profit });
@@ -708,7 +645,7 @@
 
         let html = `<h2 style="color:#10b981; margin-top:0;">🚀 BÁO CÁO CHUYẾN BAY THÀNH CÔNG</h2>
         <div style="font-size:15px; line-height:1.8;">
-            <p><b>Hành khách:</b> Y: ${cY} (Giá $${pY}) | J: ${cJ} (Giá $${pJ}) | F: ${cF} (Giá $${pF})</p>
+            <p><b>Hành khách:</b> Y: ${actY}/${maxcY} | J: ${actJ}/${maxcJ} | F: ${actF}/${maxcF}</p>
             <p><b>Doanh thu vé bán:</b> <span style="color:#10b981; font-weight:bold;">${formatNumber(rev)} $</span></p>
             <p><b>Chi phí Nhiên liệu (${formatNumber(totalFuel)} Lbs):</b> -${formatNumber(fuelCost)} $</p>
             <p><b>Chi phí CO2 (${formatNumber(totalCO2)} kg):</b> -${formatNumber(co2Cost)} $</p>
@@ -718,7 +655,6 @@
         </div><div style="text-align:right;"><button class="btn-main" onclick="closeCommonModal()">Đóng</button></div>`;
         openCommonModal(html);
     }
-
     loadAuth();
 </script>
 </body>
