@@ -782,14 +782,18 @@
         let flightTime = Math.ceil(dist / speed);
         let totalPax = actY + actJ + actF;
         
-        let totalFuel = (dist * fuelCons); 
+        // 1. Công thức tính lượng nhiên liệu: Nhiên liệu tiêu thụ * Khoảng cách
+        let totalFuel = (fuelCons * dist); 
         
-        // Công thức mới tính tổng khối lượng CO2
-        let baseY = parseCur(ac.pax) || 1; // Số HK (Y) gốc ở cấu hình máy bay, ngăn lỗi chia cho 0
-        let totalCO2 = (co2Emis * dist * totalPax) / baseY; 
+        // 2. Công thức tính lượng CO2 mới
+        let baseY = parseCur(ac.pax) || 1; // Số HK (Y) gốc ở cấu hình máy bay
+        let totalConfigPax = maxcY + maxcJ + maxcF; // Tổng số khách cấu hình máy bay của chặng
+        let totalCO2 = co2Emis * dist * totalPax * (totalConfigPax / baseY); 
         
+        // 3. Công thức tính giá Tiền (chia 1000 rồi nhân đơn giá)
         let fuelCost = Math.round((totalFuel / 1000) * pFuel); 
-        let co2Cost = Math.round((totalCO2 / 1000) * pCO2); // Lấy số kg CO2 vừa tính để ra giá tiền
+        let co2Cost = Math.round((totalCO2 / 1000) * pCO2); 
+        
         let rev = (actY * pY) + (actJ * pJ) + (actF * pF);
         
         let maintCost = Math.round(0.15 * (rev - (fuelCost + co2Cost))); 
