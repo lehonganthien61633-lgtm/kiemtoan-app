@@ -773,7 +773,11 @@
         let frId = rt.fRouteId; let dem = companyData.demands.find(d => d.frId === frId); let fr = companyData.flightRoutes.find(r => r.id === frId);
 
         let dist = parseCur(dem.distance); let speed = parseCur(ac.maxspeed) || 1;
-        let fuelCons = parseCur(ac.fuelcons); let co2Emis = parseCur(ac.co2emis);
+        
+        // Sử dụng parseFloat thay vì parseCur để nhận chính xác số thập phân (Ví dụ: 0.15 kg/km)
+        let fuelCons = parseFloat(String(ac.fuelcons || "0").replace(',', '.')) || 0; 
+        let co2Emis = parseFloat(String(ac.co2emis || "0").replace(',', '.')) || 0;
+        
         let maintHours = parseCur(ac.maintcheck); let acheckCost = parseCur(ac.acheck);
         
         let pFuel = parseCur(companyData.prices?.fuel); let pCO2 = parseCur(companyData.prices?.co2);
@@ -783,11 +787,12 @@
         let totalPax = actY + actJ + actF;
         
         // 1. Công thức tính lượng nhiên liệu: Nhiên liệu tiêu thụ * Khoảng cách
-        let totalFuel = (fuelCons * dist); 
+        let totalFuel = fuelCons * dist; 
         
         // 2. Công thức tính lượng CO2 mới
-        let baseY = parseCur(ac.pax) || 1; // Số HK (Y) gốc ở cấu hình máy bay
+        let baseY = parseCur(ac.pax) || 1; // Số lượng khách Y lấy dữ liệu ở cấu hình máy bay
         let totalConfigPax = maxcY + maxcJ + maxcF; // Tổng số khách cấu hình máy bay của chặng
+        
         let totalCO2 = co2Emis * dist * totalPax * (totalConfigPax / baseY); 
         
         // 3. Công thức tính giá Tiền (chia 1000 rồi nhân đơn giá)
@@ -807,12 +812,13 @@
         companyData.history.push({ id: 'HS_'+Date.now(), acId: ac.id, routeId: routeId, date: new Date().toLocaleDateString('vi-VN'), revenue: rev, fuel: fuelCost, co2: co2Cost, maint: maintCost, acheckCost: acheckFee, profit: profit });
         triggerSave();
 
+        // Thêm Math.round() vào hiển thị để làm tròn số kg và lbs tránh hiện số thập phân dài dòng
         let html = `<h2 style="color:#10b981; margin-top:0;">🚀 BÁO CÁO CHUYẾN BAY THÀNH CÔNG</h2>
         <div style="font-size:15px; line-height:1.8;">
             <p><b>Hành khách:</b> Y: ${actY}/${maxcY} | J: ${actJ}/${maxcJ} | F: ${actF}/${maxcF}</p>
             <p><b>Doanh thu vé bán:</b> <span style="color:#10b981; font-weight:bold;">${formatNumber(rev)} $</span></p>
-            <p><b>Chi phí Nhiên liệu (${formatNumber(totalFuel)} Lbs):</b> -${formatNumber(fuelCost)} $</p>
-            <p><b>Chi phí CO2 (${formatNumber(totalCO2)} kg):</b> -${formatNumber(co2Cost)} $</p>
+            <p><b>Chi phí Nhiên liệu (${formatNumber(Math.round(totalFuel))} Lbs):</b> -${formatNumber(fuelCost)} $</p>
+            <p><b>Chi phí CO2 (${formatNumber(Math.round(totalCO2))} kg):</b> -${formatNumber(co2Cost)} $</p>
             <p><b>Phí bảo trì hao mòn (15%):</b> -${formatNumber(maintCost)} $</p>
             <p><b>Quỹ dự phòng A-Check:</b> -${formatNumber(acheckFee)} $</p>
             <hr><h3 style="color:${profit>=0 ? '#10b981' : '#ef4444'}">LỢI NHUẬN THUẦN: ${formatNumber(profit)} $</h3>
