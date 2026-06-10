@@ -512,14 +512,33 @@
         let tbody = document.getElementById('flight-routes-tbody'); let tr = document.createElement('tr');
         tr.dataset.id = fr.id || ('FR_'+Date.now());
         let hubOpts = companyData.hubs.map(h => { let ap = globalAirports.find(a=>a.id===h.airportId); return `<option value="${h.id}" ${fr.hub===h.id?'selected':''}>${ap?.name||'HUB'} (${ap?.icao||'---'})</option>`; }).join('');
-        let destOpts = globalAirports.map(a => `<option value="${a.id}" ${fr.dest===a.id?'selected':''}>${a.name} (${a.icao||'---'})</option>`).join('');
+        
+        // Tự động loại bỏ sân bay HUB khỏi danh sách Sân bay đến khi khởi tạo
+        let hubAirportId = fr.hub ? companyData.hubs.find(h => h.id === fr.hub)?.airportId : null;
+        let destOpts = globalAirports.filter(a => a.id !== hubAirportId).map(a => `<option value="${a.id}" ${fr.dest===a.id?'selected':''}>${a.name} (${a.icao||'---'})</option>`).join('');
+
         tr.innerHTML = `
             <td class="fr-stt" style="text-align: center; font-weight: bold;"></td>
-            <td><select class="fr-hub" onchange="triggerSave()" style="width: 100%; padding:6px;"><option value="">-- Chọn HUB --</option>${hubOpts}</select></td>
+            <td><select class="fr-hub" onchange="updateDestDropdown(this); triggerSave()" style="width: 100%; padding:6px;"><option value="">-- Chọn HUB --</option>${hubOpts}</select></td>
             <td><select class="fr-dest" onchange="triggerSave()" style="width: 100%; padding:6px;"><option value="">-- Chọn Sân Bay Đến --</option>${destOpts}</select></td>
             <td><button class="btn-main" style="background:#3b82f6; padding:6px;" onclick="showFlightRouteInfo('${tr.dataset.id}')">Chi Tiết / Giá</button> <button class="btn-remove" onclick="if(confirm('Xóa?')){ this.closest('tr').remove(); triggerSave(); }">Xóa</button></td>
         `;
         tbody.appendChild(tr); document.querySelectorAll('#flight-routes-tbody tr').forEach((r, i) => r.querySelector('.fr-stt').innerText = i + 1);
+    }
+
+    // Hàm mới để xử lý sự kiện onchange của dropdown HUB
+    function updateDestDropdown(hubSelect) {
+        let tr = hubSelect.closest('tr');
+        let destSelect = tr.querySelector('.fr-dest');
+        let currentDest = destSelect.value;
+        let hubId = hubSelect.value;
+        
+        let hubObj = companyData.hubs.find(h => h.id === hubId);
+        let hubAirportId = hubObj ? hubObj.airportId : null;
+
+        // Cập nhật lại danh sách đích, bỏ qua sân bay đang làm HUB
+        destSelect.innerHTML = '<option value="">-- Chọn Sân Bay Đến --</option>' + 
+            globalAirports.filter(a => a.id !== hubAirportId).map(a => `<option value="${a.id}" ${currentDest === a.id ? 'selected' : ''}>${a.name} (${a.icao||'---'})</option>`).join('');
     }
     
     function showFlightRouteInfo(frId) {
@@ -647,14 +666,36 @@
         let hubIcao = hAp?.icao || "XXXX"; let destIcao = dest?.icao || "XXXX"; let segPrefix = (hubIcao.slice(-2) + destIcao.slice(-2)).toUpperCase();
         
         let maxRoute = 0, maxSeg = 0;
-        document.querySelectorAll('.r-route').forEach(inp => { if(inp.value.startsWith(countryCode+'-')) { let num = parseInt(inp.value.split('-')[1]); if(num > maxRoute) maxRoute = num; } });
-        document.querySelectorAll('.r-segment').forEach(inp => { if(inp.value.startsWith(segPrefix+'-')) { let num = parseInt(inp.value.split('-')[1]); if(num > maxSeg) maxSeg = num; } });
+        let hasPrevRouteNum = false, hasPrevSegNum = false;
+
+        // Quét tìm xem đã có số tiền tố liền trước hay chưa
+        document.querySelectorAll('.r-route').forEach(inp => { 
+            if(inp.value.startsWith(countryCode+'-') && inp !== tr.querySelector('.r-route')) { 
+                let parts = inp.value.split('-');
+                if(parts.length > 1 && !isNaN(parseInt(parts[1]))) {
+                    hasPrevRouteNum = true;
+                    let num = parseInt(parts[1]); 
+                    if(num > maxRoute) maxRoute = num; 
+                }
+            } 
+        });
+        document.querySelectorAll('.r-segment').forEach(inp => { 
+            if(inp.value.startsWith(segPrefix+'-') && inp !== tr.querySelector('.r-segment')) { 
+                let parts = inp.value.split('-');
+                if(parts.length > 1 && !isNaN(parseInt(parts[1]))) {
+                    hasPrevSegNum = true;
+                    let num = parseInt(parts[1]); 
+                    if(num > maxSeg) maxSeg = num; 
+                }
+            } 
+        });
         
-        tr.querySelector('.r-route').value = countryCode + '-' + (maxRoute + 1).toString().padStart(3,'0');
-        tr.querySelector('.r-segment').value = segPrefix + '-' + (maxSeg + 1).toString().padStart(3,'0');
+        // Chỉ cộng thêm 1 nếu đã có số liền trước, nếu chưa thì gán mặc định là 001
+        tr.querySelector('.r-route').value = hasPrevRouteNum ? countryCode + '-' + (maxRoute + 1).toString().padStart(3,'0') : countryCode + '-001';
+        tr.querySelector('.r-segment').value = hasPrevSegNum ? segPrefix + '-' + (maxSeg + 1).toString().padStart(3,'0') : segPrefix + '-001';
+        
         closeCommonModal(); triggerSave();
     }
-
     // --- CẤU HÌNH GHẾ VÀ LỊCH SỬ TÀU BAY ---
     function showAircraftInfo(acId, routeId) {
         let ac = companyData.fleet.find(f => f.id === acId); if(!ac) return alert("Vui lòng chọn Máy bay!"); 
@@ -742,16 +783,19 @@
         let totalPax = actY + actJ + actF;
         
         let totalFuel = (dist * fuelCons); 
-        let totalCO2 = (co2Emis * totalPax * dist); // Công thức mới
+        
+        // Công thức mới tính tổng khối lượng CO2
+        let baseY = parseCur(ac.pax) || 1; // Số HK (Y) gốc ở cấu hình máy bay, ngăn lỗi chia cho 0
+        let totalCO2 = (co2Emis * dist * totalPax) / baseY; 
         
         let fuelCost = Math.round((totalFuel / 1000) * pFuel); 
-        let co2Cost = Math.round((totalCO2 / 1000) * pCO2);
+        let co2Cost = Math.round((totalCO2 / 1000) * pCO2); // Lấy số kg CO2 vừa tính để ra giá tiền
         let rev = (actY * pY) + (actJ * pJ) + (actF * pF);
         
-        let maintCost = Math.round(0.15 * (rev - (fuelCost + co2Cost))); // Công thức mới
+        let maintCost = Math.round(0.15 * (rev - (fuelCost + co2Cost))); 
         if (maintCost < 0) maintCost = 0; 
         
-        let acheckDenom = (maintHours - 50) / flightTime; // Công thức mới
+        let acheckDenom = (maintHours - 50) / flightTime; 
         let acheckFee = acheckDenom > 0 ? Math.round(acheckCost / acheckDenom) : acheckCost;
         
         let profit = rev - fuelCost - co2Cost - maintCost - acheckFee;
