@@ -390,7 +390,19 @@
         let newFleet = [];
         document.querySelectorAll('#fleet-tbody tr').forEach(tr => {
             let maker = tr.querySelector('.f-maker').value; let model = tr.querySelector('.f-model').value.trim();
-            if (maker || model) { newFleet.push({ id: tr.dataset.id, maker: maker, model: model, range: tr.querySelector('.f-range').value.trim(), maxspeed: tr.querySelector('.f-maxspeed').value.trim(), pax: tr.querySelector('.f-pax').value.trim(), crew_str: tr.querySelector('.f-crew').value, crew_data: JSON.parse(tr.querySelector('.f-crew-data').value || '{}'), acheck: tr.querySelector('.f-acheck').value.trim(), maintcheck: tr.querySelector('.f-maintcheck').value.trim(), fuelcons: tr.querySelector('.f-fuelcons').value.trim(), co2emis: tr.querySelector('.f-co2emis').value.trim(), price: tr.querySelector('.f-price').value.trim() }); }
+            if (maker || model) { 
+                newFleet.push({ 
+                    id: tr.dataset.id, maker: maker, model: model, range: tr.querySelector('.f-range').value.trim(), 
+                    maxspeed: tr.querySelector('.f-maxspeed').value.trim(), pax: tr.querySelector('.f-pax').value.trim(), 
+                    crew_str: tr.querySelector('.f-crew').value, crew_data: JSON.parse(tr.querySelector('.f-crew-data').value || '{}'), 
+                    acheck: tr.querySelector('.f-acheck').value.trim(), maintcheck: tr.querySelector('.f-maintcheck').value.trim(), 
+                    fuelcons: tr.querySelector('.f-fuelcons').value.trim(), co2emis: tr.querySelector('.f-co2emis').value.trim(), 
+                    price: tr.querySelector('.f-price').value.trim(),
+                    upg_prices: JSON.parse(tr.querySelector('.f-upg-prices')?.value || '{}'), 
+                    applied_upgrades: JSON.parse(tr.querySelector('.f-applied-upgrades')?.value || '{}'), 
+                    flightCountOffset: parseInt(tr.querySelector('.f-flight-count-offset')?.value || '0')
+                }); 
+            }
         }); companyData.fleet = newFleet;
 
         let newAirports = [];
@@ -422,7 +434,7 @@
         document.querySelectorAll('#routes-tbody tr').forEach(tr => {
             let route = tr.querySelector('.r-route').value.trim(); let segment = tr.querySelector('.r-segment').value.trim();
             let flightRouteId = tr.querySelector('.r-froute-id').value; let existRoute = companyData.routes.find(r => r.id === tr.dataset.id);
-            if (route || segment) { newRoutes.push({ id: tr.dataset.id, fRouteId: flightRouteId, route: route, segment: segment, aircraft: tr.querySelector('.r-aircraft').value, config: existRoute?.config }); }
+            if (route || segment) { newRoutes.push({ id: tr.dataset.id, fRouteId: flightRouteId, route: route, segment: segment, aircraft: tr.querySelector('.r-aircraft').value, config: existRoute?.config, cooldownUntil: existRoute?.cooldownUntil || 0 }); }
         }); companyData.routes = newRoutes;
 
         try {
@@ -602,10 +614,14 @@
     function saveCrew() { let p = document.getElementById('c-p').value||0, c=document.getElementById('c-c').value||0, e=document.getElementById('c-e').value||0, t=document.getElementById('c-t').value||0; if(currentActiveInput){ currentActiveInput.value=`P:${p}, C:${c}, E:${e}, T:${t}`; currentActiveInput.nextElementSibling.value=JSON.stringify({p,c,e,t}); triggerSave(); } closeCommonModal(); }
 
     function renderFleetTable() {
+        let thThem = document.querySelector('#module-fleet thead tr th:last-child');
+        if(thThem) thThem.innerText = "Thông tin thêm"; // Thay đổi header tự động
+
         let tbody = document.getElementById('fleet-tbody'); tbody.innerHTML = '';
         if(companyData.fleet.length === 0) { addFleetRow(); } else { companyData.fleet.forEach(ac => addFleetRow(ac)); }
         updateDashboardCount();
     }
+    
     function addFleetRow(ac) {
         if (!ac || ac instanceof Event) ac = {};
         let tbody = document.getElementById('fleet-tbody'); let tr = document.createElement('tr');
@@ -624,9 +640,37 @@
             <td><input type="text" class="f-fuelcons" value="${ac.fuelcons || ''}" placeholder="Lbs/km" style="width: 100%; box-sizing: border-box; text-align: center;" oninput="triggerSave()"></td>
             <td><input type="text" class="f-co2emis" value="${ac.co2emis || ''}" placeholder="kg/km" style="width: 100%; box-sizing: border-box; text-align: center;" oninput="triggerSave()"></td>
             <td><input type="text" class="f-price" value="${ac.price || ''}" placeholder="$" style="width: 100%; box-sizing: border-box; text-align: center;" oninput="formatCurrency(this); triggerSave()"></td>
-            <td><button class="btn-remove" onclick="if(confirm('Xóa tàu bay?')) { this.closest('tr').remove(); triggerSave(); }">Bán</button></td>
+            <td>
+                <button class="btn-main" style="background:#8b5cf6; margin-bottom: 5px; font-size: 12px; padding: 4px;" onclick="openUpgradePrices('${tr.dataset.id}')">+ Bảng Giá Cải Tạo</button>
+                <button class="btn-remove" style="font-size: 12px; padding: 4px;" onclick="if(confirm('Xóa tàu bay?')) { this.closest('tr').remove(); triggerSave(); }">Xóa/Bán</button>
+                <input type="hidden" class="f-upg-prices" value='${JSON.stringify(ac.upg_prices||{})}'>
+                <input type="hidden" class="f-applied-upgrades" value='${JSON.stringify(ac.applied_upgrades||{})}'>
+                <input type="hidden" class="f-flight-count-offset" value='${ac.flightCountOffset||0}'>
+            </td>
         `;
         tbody.appendChild(tr); document.querySelectorAll('#fleet-tbody tr').forEach((r, i) => r.querySelector('.f-stt').innerText = i + 1);
+    }
+
+    function openUpgradePrices(acId) {
+        let tr = document.querySelector(`#fleet-tbody tr[data-id="${acId}"]`);
+        let prices = JSON.parse(tr.querySelector('.f-upg-prices').value || '{}');
+        let html = `<h3>🔧 Bảng Giá Cải Tạo Tàu Bay</h3>
+            <div class="form-group"><label>Giảm 10% CO2 ($):</label><input type="text" id="upg-p-co2" value="${prices.co2||''}" oninput="formatCurrency(this)"></div>
+            <div class="form-group"><label>Tăng 10% Tốc độ ($):</label><input type="text" id="upg-p-speed" value="${prices.speed||''}" oninput="formatCurrency(this)"></div>
+            <div class="form-group"><label>Giảm 10% Nhiên liệu ($):</label><input type="text" id="upg-p-fuel" value="${prices.fuel||''}" oninput="formatCurrency(this)"></div>
+            <div style="text-align:right; margin-top:15px;">
+                <button class="btn-add" onclick="saveUpgradePrices('${acId}')">Lưu Giá</button>
+                <button class="btn-remove" onclick="closeCommonModal()">Đóng</button>
+            </div>
+        `;
+        openCommonModal(html);
+    }
+
+    function saveUpgradePrices(acId) {
+        let tr = document.querySelector(`#fleet-tbody tr[data-id="${acId}"]`);
+        let prices = { co2: document.getElementById('upg-p-co2').value, speed: document.getElementById('upg-p-speed').value, fuel: document.getElementById('upg-p-fuel').value };
+        tr.querySelector('.f-upg-prices').value = JSON.stringify(prices);
+        triggerSave(); closeCommonModal(); alert("Lưu giá cải tạo thành công!");
     }
 
     // --- PHÂN CÔNG ĐỘI BAY (ROUTES) ---
@@ -702,41 +746,124 @@
         let rt = companyData.routes.find(r => r.id === routeId) || {};
         let mk = companyData.makers.find(m => m.id === ac.maker); let makerName = mk ? mk.name : '---';
         let baseY = parseCur(ac.pax); let cY = rt.config?.y !== undefined ? rt.config.y : baseY; let cJ = rt.config?.j || 0; let cF = rt.config?.f || 0;
+        let seatCost = parseCur(rt.config?.cost) || 0;
         
-        let hist = companyData.history.filter(h => h.acId === acId); let totalAcheckPaid = hist.reduce((sum, h) => sum + (h.acheckCost||0), 0);
+        let hist = companyData.history.filter(h => h.acId === acId); 
+        let totalAcheckPaid = hist.reduce((sum, h) => sum + (h.acheckCost||0), 0);
+        let totalRevenue = hist.reduce((sum, h) => sum + (h.revenue||0), 0);
+        
+        let applied = ac.applied_upgrades || { co2: false, speed: false, fuel: false };
+        let upgPrices = ac.upg_prices || { co2: "0", speed: "0", fuel: "0" };
+        let totalUpgCost = 0;
+        if(applied.co2) totalUpgCost += parseCur(upgPrices.co2);
+        if(applied.speed) totalUpgCost += parseCur(upgPrices.speed);
+        if(applied.fuel) totalUpgCost += parseCur(upgPrices.fuel);
+        
+        // Giá trị hiện tại: Giá gốc + Giá cấu hình ghế - Tiền nâng cấp + Tổng thu nhập vé
+        let basePrice = parseCur(ac.price);
+        let currentValue = basePrice + seatCost - totalUpgCost + totalRevenue;
+        let actualFlightCount = hist.length + (ac.flightCountOffset || 0);
+
         let histRows = hist.slice(-5).map(h => `<tr><td style="font-size:12px; border:1px solid #ccc; padding:4px;">${h.date}</td><td style="font-size:12px; border:1px solid #ccc; padding:4px; color:#10b981;">+${formatNumber(h.revenue)}$</td><td style="font-size:12px; border:1px solid #ccc; padding:4px; color:#ef4444;">-${formatNumber(h.fuel + h.co2 + h.maint + h.acheckCost)}$</td></tr>`).join('');
 
         let html = `
             <h2 style="color:#0284c7; margin-top:0;">📄 CHI TIẾT MÁY BAY: ${makerName} ${ac.model}</h2>
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; font-size:14px;"><div><b>Tầm bay:</b> ${ac.range||0} km</div><div><b>Maint Check:</b> ${ac.maintcheck||0} Giờ</div><div><b>Giá A-Check:</b> ${ac.acheck||0} $</div></div>
-            <button class="btn-main" style="margin-top:15px; width:100%;" onclick="document.getElementById('cfg-toggle').style.display='block'">⚙️ Sửa Cấu Hình Ghế</button>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; font-size:14px; background:#f1f5f9; padding:10px; border-radius:8px;">
+                <div><b>Tầm bay:</b> ${ac.range||0} km</div>
+                <div><b>Maint Check:</b> ${ac.maintcheck||0} Giờ</div>
+                <div><b>Giá trị hiện tại:</b> <span style="color:#10b981; font-weight:bold; font-size:16px;">${formatNumber(currentValue)} $</span></div>
+                <div><b>Số lần bay:</b> ${actualFlightCount} <button style="background:none; border:none; color:#3b82f6; cursor:pointer; text-decoration:underline; font-size:12px;" onclick="editFlightCount('${acId}')">(Điều chỉnh)</button></div>
+            </div>
+            
+            <h4 style="margin-bottom:5px; margin-top: 15px;">🚀 Trạng Thái Nâng Cấp Máy Bay</h4>
+            <div style="display:flex; gap:10px; margin-bottom:15px;">
+                <button class="${applied.co2 ? 'btn-remove' : 'btn-add'}" style="flex:1; font-size:12px; padding:6px;" onclick="toggleUpgrade('${acId}', 'co2', ${!applied.co2})">${applied.co2 ? '❌ Hủy giảm CO2' : '✅ Giảm 10% CO2'}</button>
+                <button class="${applied.speed ? 'btn-remove' : 'btn-add'}" style="flex:1; font-size:12px; padding:6px;" onclick="toggleUpgrade('${acId}', 'speed', ${!applied.speed})">${applied.speed ? '❌ Hủy tăng Tốc độ' : '✅ Tăng 10% Tốc độ'}</button>
+                <button class="${applied.fuel ? 'btn-remove' : 'btn-add'}" style="flex:1; font-size:12px; padding:6px;" onclick="toggleUpgrade('${acId}', 'fuel', ${!applied.fuel})">${applied.fuel ? '❌ Hủy giảm NL' : '✅ Giảm 10% Nhiên liệu'}</button>
+            </div>
+
+            <button class="btn-main" style="width:100%;" onclick="document.getElementById('cfg-toggle').style.display='block'">⚙️ Sửa Cấu Hình Ghế</button>
             <div id="cfg-toggle" style="display:none; border:2px solid #e2e8f0; background:#f8fafc; padding:15px; border-radius:8px; margin-top:10px;">
                 <div style="display:flex; gap:10px; margin-bottom:10px;"><label>Y: <input type="number" id="cfg-y" value="${cY}" style="width:60px;"></label><label>J: <input type="number" id="cfg-j" value="${cJ}" style="width:60px;"></label><label>F: <input type="number" id="cfg-f" value="${cF}" style="width:60px;"></label></div>
                 <label>Chi phí sửa ghế ($): <input type="text" id="cfg-cost" value="${rt.config?.cost||''}" oninput="formatCurrency(this)"></label>
-                <div style="margin-top:10px;"><button class="btn-add" onclick="saveAcConfig('${routeId}', true)">Lưu Cấu Hình</button> <button class="btn-main" onclick="saveAcConfig('${routeId}', false)">Reset Về Gốc</button></div>
+                <div style="margin-top:10px;"><button class="btn-add" onclick="saveAcConfig('${routeId}', '${acId}', true)">Lưu Cấu Hình</button> <button class="btn-main" onclick="saveAcConfig('${routeId}', '${acId}', false)">Reset Về Gốc</button></div>
                 <p style="color:#64748b; font-size:12px; margin-top:5px;">(Giá mua gốc: ${ac.price||0} $)</p>
             </div>
+            
             <div style="margin-top:20px; border-top:2px solid #e2e8f0; padding-top:10px;"><p><b>Tổng chi phí đã A-Check:</b> <span style="color:#ef4444;">${formatNumber(totalAcheckPaid)} $</span></p><b>Lịch Sử 5 Chuyến Bay Gần Nhất:</b>
                 <table style="width:100%; border-collapse:collapse; margin-top:5px;"><tr style="background:#f1f5f9;"><th style="border:1px solid #ccc; padding:4px;">Ngày</th><th style="border:1px solid #ccc; padding:4px;">Doanh Thu</th><th style="border:1px solid #ccc; padding:4px;">Tổng Chi</th></tr>${histRows || '<tr><td colspan="3" style="text-align:center; padding:10px;">Chưa có dữ liệu</td></tr>'}</table>
             </div><div style="text-align:right; margin-top:15px;"><button class="btn-remove" onclick="closeCommonModal()">Đóng Lại</button></div>
         `;
         openCommonModal(html);
     }
-    function saveAcConfig(routeId, isMod) {
+    
+    function saveAcConfig(routeId, acId, isMod) {
         let rt = companyData.routes.find(r => r.id === routeId); if(!rt.config) rt.config = {};
         rt.config.y = parseInt(document.getElementById('cfg-y').value)||0; rt.config.j = parseInt(document.getElementById('cfg-j').value)||0; rt.config.f = parseInt(document.getElementById('cfg-f').value)||0;
         rt.config.cost = isMod ? document.getElementById('cfg-cost').value : '';
-        triggerSave(); closeCommonModal(); alert('Đã lưu dữ liệu Cấu Hình Tàu Bay thành công!');
+        triggerSave(); showAircraftInfo(acId, routeId); // Refresh modal tự động
+    }
+
+    function toggleUpgrade(acId, type, state) {
+        let ac = companyData.fleet.find(f => f.id === acId);
+        if(!ac.applied_upgrades) ac.applied_upgrades = { co2: false, speed: false, fuel: false };
+        ac.applied_upgrades[type] = state;
+        let tr = document.querySelector(`#fleet-tbody tr[data-id="${acId}"]`);
+        if(tr) tr.querySelector('.f-applied-upgrades').value = JSON.stringify(ac.applied_upgrades);
+        triggerSave();
+        let openRt = companyData.routes.find(r => r.aircraft === acId);
+        if(openRt) showAircraftInfo(acId, openRt.id); // Tải lại form nâng cấp lập tức
+    }
+
+    function editFlightCount(acId) {
+        let offset = prompt("Nhập số lần bay muốn cộng thêm (hoặc số âm để trừ đi):", "0");
+        if(offset !== null && !isNaN(parseInt(offset))) {
+            let ac = companyData.fleet.find(f => f.id === acId);
+            ac.flightCountOffset = parseInt(offset);
+            let tr = document.querySelector(`#fleet-tbody tr[data-id="${acId}"]`);
+            if(tr) tr.querySelector('.f-flight-count-offset').value = ac.flightCountOffset;
+            triggerSave();
+            let openRt = companyData.routes.find(r => r.aircraft === acId);
+            if(openRt) showAircraftInfo(acId, openRt.id);
+        }
     }
 
     // --- CẤT CÁNH ---
+    let countdownInterval = null;
+
     function renderTakeoffTable() {
         let tbody = document.getElementById('takeoff-tbody'); tbody.innerHTML = '';
+        let now = Date.now();
         companyData.routes.forEach((rt, i) => {
             if(!rt.route || !rt.aircraft) return;
             let ac = companyData.fleet.find(f => f.id === rt.aircraft); let mk = companyData.makers.find(m => m.id === ac?.maker);
-            tbody.innerHTML += `<tr><td style="text-align:center;">${i+1}</td><td style="text-align:center;"><input type="checkbox" class="chk-takeoff" data-id="${rt.id}" style="width:20px; height:20px;"></td><td style="text-align:center; font-weight:bold; color:#10b981;">${rt.segment}</td><td style="text-align:center;">${mk?.name||''} ${ac?.model||''}</td><td style="text-align:center;"><button class="btn-main" style="background:#f59e0b;" onclick="executeTakeoff('${rt.id}')">🚀 Cất Cánh</button></td></tr>`;
+            
+            let cdUntil = rt.cooldownUntil || 0;
+            let btnHtml = '';
+            if(cdUntil > now) {
+                btnHtml = `<span class="cooldown-timer" data-until="${cdUntil}" style="color:#ef4444; font-weight:bold;">Đang tải...</span>`;
+            } else {
+                btnHtml = `<button class="btn-main" style="background:#f59e0b;" onclick="executeTakeoff('${rt.id}')">🚀 Cất Cánh</button>`;
+            }
+
+            tbody.innerHTML += `<tr><td style="text-align:center;">${i+1}</td><td style="text-align:center;"><input type="checkbox" class="chk-takeoff" data-id="${rt.id}" style="width:20px; height:20px;"></td><td style="text-align:center; font-weight:bold; color:#10b981;">${rt.segment}</td><td style="text-align:center;">${mk?.name||''} ${ac?.model||''}</td><td style="text-align:center;" class="tk-action-cell">${btnHtml}</td></tr>`;
         });
+
+        if(!countdownInterval) { countdownInterval = setInterval(updateAllCountdowns, 1000); }
+    }
+
+    function updateAllCountdowns() {
+        let now = Date.now(); let needsRender = false;
+        document.querySelectorAll('.cooldown-timer').forEach(el => {
+            let until = parseInt(el.getAttribute('data-until'));
+            if(until <= now) { needsRender = true; } 
+            else {
+                let diff = until - now;
+                let h = Math.floor(diff / 3600000); let m = Math.floor((diff % 3600000) / 60000); let s = Math.floor((diff % 60000) / 1000);
+                el.innerText = `⏳ ${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+            }
+        });
+        if(needsRender) renderTakeoffTable(); // Trạng thái thay đổi từ đang bay sang Sẵn sàng -> Vẽ lại
     }
 
     function executeTakeoff(routeId) {
@@ -772,47 +899,51 @@
         let rt = companyData.routes.find(r => r.id === routeId); let ac = companyData.fleet.find(f => f.id === rt.aircraft);
         let frId = rt.fRouteId; let dem = companyData.demands.find(d => d.frId === frId); let fr = companyData.flightRoutes.find(r => r.id === frId);
 
-        let dist = parseCur(dem.distance); let speed = parseCur(ac.maxspeed) || 1;
+        let dist = parseCur(dem.distance); 
         
-        // Sử dụng parseFloat thay vì parseCur để nhận chính xác số thập phân (Ví dụ: 0.15 kg/km)
+        // Ứng dụng các thông số đã Nâng cấp
+        let applied = ac.applied_upgrades || { co2: false, speed: false, fuel: false };
+        
+        let speed = parseCur(ac.maxspeed) || 1;
+        if(applied.speed) speed = speed * 1.10; // Tăng 10%
+        
         let fuelCons = parseFloat(String(ac.fuelcons || "0").replace(',', '.')) || 0; 
+        if(applied.fuel) fuelCons = fuelCons * 0.90; // Giảm 10%
+        
         let co2Emis = parseFloat(String(ac.co2emis || "0").replace(',', '.')) || 0;
+        if(applied.co2) co2Emis = co2Emis * 0.90; // Giảm 10%
         
         let maintHours = parseCur(ac.maintcheck); let acheckCost = parseCur(ac.acheck);
-        
         let pFuel = parseCur(companyData.prices?.fuel); let pCO2 = parseCur(companyData.prices?.co2);
         let pY = parseCur(fr.prices?.y); let pJ = parseCur(fr.prices?.j); let pF = parseCur(fr.prices?.f);
 
         let flightTime = Math.ceil(dist / speed);
         let totalPax = actY + actJ + actF;
         
-        // 1. Công thức tính lượng nhiên liệu: Nhiên liệu tiêu thụ * Khoảng cách
+        // Công thức tính nhiên liệu và CO2
         let totalFuel = fuelCons * dist; 
-        
-        // 2. Công thức tính lượng CO2 mới
-        let baseY = parseCur(ac.pax) || 1; // Số lượng khách Y lấy dữ liệu ở cấu hình máy bay
-        let totalConfigPax = maxcY + maxcJ + maxcF; // Tổng số khách cấu hình máy bay của chặng
-        
+        let baseY = parseCur(ac.pax) || 1; 
+        let totalConfigPax = maxcY + maxcJ + maxcF; 
         let totalCO2 = co2Emis * dist * totalPax * (totalConfigPax / baseY); 
         
-        // 3. Công thức tính giá Tiền (chia 1000 rồi nhân đơn giá)
+        // Tính chi phí
         let fuelCost = Math.round((totalFuel / 1000) * pFuel); 
-        let co2Cost = Math.round((totalCO2 / 100) * pCO2); 
-        
+        let co2Cost = Math.round((totalCO2 / 1000) * pCO2); // Cố định hệ số chia 1000 như bạn yêu cầu 
         let rev = (actY * pY) + (actJ * pJ) + (actF * pF);
-        
         let maintCost = Math.round(0.15 * (rev - (fuelCost + co2Cost))); 
         if (maintCost < 0) maintCost = 0; 
-        
         let acheckDenom = (maintHours - 50) / flightTime; 
         let acheckFee = acheckDenom > 0 ? Math.round(acheckCost / acheckDenom) : acheckCost;
-        
         let profit = rev - fuelCost - co2Cost - maintCost - acheckFee;
+
+        // TÍNH TOÁN THỜI GIAN ĐẾM NGƯỢC (Khoảng cách / Vận tốc => giờ. Chuyển sang ms và giảm đi một nửa thời gian)
+        let cooldownTimeMs = (dist / speed) * 3600000 * 0.5;
+        rt.cooldownUntil = Date.now() + cooldownTimeMs;
 
         companyData.history.push({ id: 'HS_'+Date.now(), acId: ac.id, routeId: routeId, date: new Date().toLocaleDateString('vi-VN'), revenue: rev, fuel: fuelCost, co2: co2Cost, maint: maintCost, acheckCost: acheckFee, profit: profit });
         triggerSave();
+        renderTakeoffTable(); // Cập nhật lại UI Cất cánh để hiển thị bộ đếm
 
-        // Thêm Math.round() vào hiển thị để làm tròn số kg và lbs tránh hiện số thập phân dài dòng
         let html = `<h2 style="color:#10b981; margin-top:0;">🚀 BÁO CÁO CHUYẾN BAY THÀNH CÔNG</h2>
         <div style="font-size:15px; line-height:1.8;">
             <p><b>Hành khách:</b> Y: ${actY}/${maxcY} | J: ${actJ}/${maxcJ} | F: ${actF}/${maxcF}</p>
