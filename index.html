@@ -710,7 +710,7 @@
     }
 
     // --- CẤU HÌNH MÁY BAY (FLEET) ---
-    unction openMakersManager() {
+    function openMakersManager() {
         let html = `<h3>🏢 Hãng Máy Bay (Global)</h3><div style="display:flex; gap:10px; margin-bottom:15px;"><input type="text" id="new-maker-name" style="flex:1; padding:8px;"><button class="btn-add" onclick="addMaker()">Thêm</button></div><table style="width:100%;"><tbody id="makers-tbody"></tbody></table><div style="text-align:right;"><button class="btn-main" onclick="closeCommonModal(); renderFleetTable();">Đóng</button></div>`;
         openCommonModal(html); renderMakersList();
     }
