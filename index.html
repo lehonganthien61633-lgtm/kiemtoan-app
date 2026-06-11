@@ -268,7 +268,8 @@
                 <tbody id="routes-tbody"></tbody>
             </table></div>
         </div>
-
+<div id="module-maintenance" class="module">
+            </div>
         <div id="module-takeoff" class="module">
             <h2 class="module-title">Lịch Trình Cất Cánh</h2>
             <div style="overflow-x: auto;"><table style="min-width: 800px;">
@@ -962,7 +963,8 @@
         rt.hoursSinceACheck = (rt.hoursSinceACheck || 0) + flightTime;
         rt.acheckFund = (rt.acheckFund || 0) + acheckFee;
 
-        let cooldownTimeMs = (dist / speed*1.5) * 3600000;
+        // CÔNG THỨC THỜI GIAN CHỜ MỚI: Khoảng cách / (Vận tốc * 150%)
+        let cooldownTimeMs = (dist / (speed * 1.5)) * 3600000;
         rt.cooldownUntil = Date.now() + cooldownTimeMs;
 
         companyData.history.push({ id: 'HS_'+Date.now(), acId: ac.id, routeId: routeId, date: new Date().toLocaleDateString('vi-VN'), revenue: rev, fuel: fuelCost, co2: co2Cost, maint: maintCost, acheckCost: acheckFee, profit: profit });
