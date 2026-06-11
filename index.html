@@ -324,6 +324,7 @@
         document.getElementById(modId).classList.add("active");
         if(modId === 'module-demands') renderDemandsTable(); if(modId === 'module-flight-routes') renderFlightRoutesTable();
         if(modId === 'module-routes') renderRoutesTable(); if(modId === 'module-takeoff') renderTakeoffTable();
+        if(modId === 'module-maintenance') renderMaintenanceTable();
         if(modId === 'module-prices') {
             document.getElementById('price-fuel').value = companyData.prices?.fuel || "0"; 
             document.getElementById('price-co2').value = companyData.prices?.co2 || "0";
@@ -400,7 +401,9 @@
                     price: tr.querySelector('.f-price').value.trim(),
                     upg_prices: JSON.parse(tr.querySelector('.f-upg-prices')?.value || '{}'), 
                     applied_upgrades: JSON.parse(tr.querySelector('.f-applied-upgrades')?.value || '{}'), 
-                    flightCountOffset: parseInt(tr.querySelector('.f-flight-count-offset')?.value || '0')
+                    flightCountOffset: parseInt(tr.querySelector('.f-flight-count-offset')?.value || '0'),
+                    hoursSinceACheck: parseInt(tr.querySelector('.f-hours-since-acheck')?.value || '0'),
+                    acheckFund: parseInt(tr.querySelector('.f-acheck-fund')?.value || '0')
                 }); 
             }
         }); companyData.fleet = newFleet;
@@ -646,6 +649,8 @@
                 <input type="hidden" class="f-upg-prices" value='${JSON.stringify(ac.upg_prices||{})}'>
                 <input type="hidden" class="f-applied-upgrades" value='${JSON.stringify(ac.applied_upgrades||{})}'>
                 <input type="hidden" class="f-flight-count-offset" value='${ac.flightCountOffset||0}'>
+                <input type="hidden" class="f-hours-since-acheck" value='${ac.hoursSinceACheck||0}'>
+                <input type="hidden" class="f-acheck-fund" value='${ac.acheckFund||0}'>
             </td>
         `;
         tbody.appendChild(tr); document.querySelectorAll('#fleet-tbody tr').forEach((r, i) => r.querySelector('.f-stt').innerText = i + 1);
@@ -746,11 +751,10 @@
         let rt = companyData.routes.find(r => r.id === routeId) || {};
         let mk = companyData.makers.find(m => m.id === ac.maker); let makerName = mk ? mk.name : '---';
         let baseY = parseCur(ac.pax); let cY = rt.config?.y !== undefined ? rt.config.y : baseY; let cJ = rt.config?.j || 0; let cF = rt.config?.f || 0;
-        let seatCost = parseCur(rt.config?.cost) || 0;
         
         let hist = companyData.history.filter(h => h.acId === acId); 
-        let totalAcheckPaid = hist.reduce((sum, h) => sum + (h.acheckCost||0), 0);
         let totalRevenue = hist.reduce((sum, h) => sum + (h.revenue||0), 0);
+        let totalExpenses = hist.reduce((sum, h) => sum + (h.fuel||0) + (h.co2||0) + (h.maint||0) + (h.acheckCost||0), 0);
         
         let applied = ac.applied_upgrades || { co2: false, speed: false, fuel: false };
         let upgPrices = ac.upg_prices || { co2: "0", speed: "0", fuel: "0" };
@@ -759,10 +763,24 @@
         if(applied.speed) totalUpgCost += parseCur(upgPrices.speed);
         if(applied.fuel) totalUpgCost += parseCur(upgPrices.fuel);
         
-        // Giá trị hiện tại: Giá gốc + Giá cấu hình ghế - Tiền nâng cấp + Tổng thu nhập vé
         let basePrice = parseCur(ac.price);
-        let currentValue = basePrice + seatCost - totalUpgCost + totalRevenue;
+        let costType = rt.config?.costType || 'add'; 
+        let seatCost = parseCur(rt.config?.cost) || 0;
+        
+        // Phân rẽ 2 loại: "Giá lúc mua (replace)" hoặc "Cộng thêm (add)"
+        let effectiveBaseCost = (costType === 'replace' && seatCost > 0) ? seatCost : basePrice;
+        let extraSeatCost = (costType === 'add') ? seatCost : 0;
+        
+        // Giá trị hiện tại: Tổng thu nhập - [Giá mua + Tiền bù thêm sửa ghế + Tiền nâng cấp + Tổng chi phí]
+        let currentValue = totalRevenue - effectiveBaseCost - extraSeatCost - totalUpgCost - totalExpenses;
         let actualFlightCount = hist.length + (ac.flightCountOffset || 0);
+
+        let speed = parseCur(ac.maxspeed) || 1;
+        if(applied.speed) speed = Math.round(speed * 1.10);
+
+        let maintcheck = parseCur(ac.maintcheck) || 0;
+        let hoursSince = ac.hoursSinceACheck || 0;
+        let remainingMaint = maintcheck - hoursSince;
 
         let histRows = hist.slice(-5).map(h => `<tr><td style="font-size:12px; border:1px solid #ccc; padding:4px;">${h.date}</td><td style="font-size:12px; border:1px solid #ccc; padding:4px; color:#10b981;">+${formatNumber(h.revenue)}$</td><td style="font-size:12px; border:1px solid #ccc; padding:4px; color:#ef4444;">-${formatNumber(h.fuel + h.co2 + h.maint + h.acheckCost)}$</td></tr>`).join('');
 
@@ -770,8 +788,10 @@
             <h2 style="color:#0284c7; margin-top:0;">📄 CHI TIẾT MÁY BAY: ${makerName} ${ac.model}</h2>
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; font-size:14px; background:#f1f5f9; padding:10px; border-radius:8px;">
                 <div><b>Tầm bay:</b> ${ac.range||0} km</div>
-                <div><b>Maint Check:</b> ${ac.maintcheck||0} Giờ</div>
-                <div><b>Giá trị hiện tại:</b> <span style="color:#10b981; font-weight:bold; font-size:16px;">${formatNumber(currentValue)} $</span></div>
+                <div><b>Vận tốc hiện tại:</b> <span style="color:#3b82f6; font-weight:bold;">${formatNumber(speed)} km/h</span></div>
+                <div><b>Giờ A-Check còn lại:</b> <span style="color:${remainingMaint < 50 ? '#ef4444' : '#10b981'}; font-weight:bold;">${remainingMaint} Giờ</span></div>
+                <div><b>Quỹ A-Check:</b> <span style="color:#f59e0b; font-weight:bold;">${formatNumber(ac.acheckFund || 0)} $</span></div>
+                <div><b>Giá trị hiện tại:</b> <span style="color:${currentValue >= 0 ? '#10b981' : '#ef4444'}; font-weight:bold; font-size:16px;">${formatNumber(currentValue)} $</span></div>
                 <div><b>Số lần bay:</b> ${actualFlightCount} <button style="background:none; border:none; color:#3b82f6; cursor:pointer; text-decoration:underline; font-size:12px;" onclick="editFlightCount('${acId}')">(Điều chỉnh)</button></div>
             </div>
             
@@ -785,12 +805,15 @@
             <button class="btn-main" style="width:100%;" onclick="document.getElementById('cfg-toggle').style.display='block'">⚙️ Sửa Cấu Hình Ghế</button>
             <div id="cfg-toggle" style="display:none; border:2px solid #e2e8f0; background:#f8fafc; padding:15px; border-radius:8px; margin-top:10px;">
                 <div style="display:flex; gap:10px; margin-bottom:10px;"><label>Y: <input type="number" id="cfg-y" value="${cY}" style="width:60px;"></label><label>J: <input type="number" id="cfg-j" value="${cJ}" style="width:60px;"></label><label>F: <input type="number" id="cfg-f" value="${cF}" style="width:60px;"></label></div>
+                <div style="margin-bottom:10px; font-size:14px; color:#334155;">
+                    <label style="margin-right:15px;"><input type="radio" name="cfg-cost-type" value="add" ${costType==='add'?'checked':''}> Cộng thêm vào giá</label>
+                    <label><input type="radio" name="cfg-cost-type" value="replace" ${costType==='replace'?'checked':''}> Giá lúc mua (Ghi đè)</label>
+                </div>
                 <label>Chi phí sửa ghế ($): <input type="text" id="cfg-cost" value="${rt.config?.cost||''}" oninput="formatCurrency(this)"></label>
                 <div style="margin-top:10px;"><button class="btn-add" onclick="saveAcConfig('${routeId}', '${acId}', true)">Lưu Cấu Hình</button> <button class="btn-main" onclick="saveAcConfig('${routeId}', '${acId}', false)">Reset Về Gốc</button></div>
-                <p style="color:#64748b; font-size:12px; margin-top:5px;">(Giá mua gốc: ${ac.price||0} $)</p>
             </div>
             
-            <div style="margin-top:20px; border-top:2px solid #e2e8f0; padding-top:10px;"><p><b>Tổng chi phí đã A-Check:</b> <span style="color:#ef4444;">${formatNumber(totalAcheckPaid)} $</span></p><b>Lịch Sử 5 Chuyến Bay Gần Nhất:</b>
+            <div style="margin-top:20px; border-top:2px solid #e2e8f0; padding-top:10px;"><b>Lịch Sử 5 Chuyến Bay Gần Nhất:</b>
                 <table style="width:100%; border-collapse:collapse; margin-top:5px;"><tr style="background:#f1f5f9;"><th style="border:1px solid #ccc; padding:4px;">Ngày</th><th style="border:1px solid #ccc; padding:4px;">Doanh Thu</th><th style="border:1px solid #ccc; padding:4px;">Tổng Chi</th></tr>${histRows || '<tr><td colspan="3" style="text-align:center; padding:10px;">Chưa có dữ liệu</td></tr>'}</table>
             </div><div style="text-align:right; margin-top:15px;"><button class="btn-remove" onclick="closeCommonModal()">Đóng Lại</button></div>
         `;
@@ -801,6 +824,8 @@
         let rt = companyData.routes.find(r => r.id === routeId); if(!rt.config) rt.config = {};
         rt.config.y = parseInt(document.getElementById('cfg-y').value)||0; rt.config.j = parseInt(document.getElementById('cfg-j').value)||0; rt.config.f = parseInt(document.getElementById('cfg-f').value)||0;
         rt.config.cost = isMod ? document.getElementById('cfg-cost').value : '';
+        let costTypeNode = document.querySelector('input[name="cfg-cost-type"]:checked');
+        rt.config.costType = costTypeNode ? costTypeNode.value : 'add';
         triggerSave(); showAircraftInfo(acId, routeId); // Refresh modal tự động
     }
 
@@ -901,17 +926,15 @@
 
         let dist = parseCur(dem.distance); 
         
-        // Ứng dụng các thông số đã Nâng cấp
         let applied = ac.applied_upgrades || { co2: false, speed: false, fuel: false };
-        
         let speed = parseCur(ac.maxspeed) || 1;
-        if(applied.speed) speed = speed * 1.10; // Tăng 10%
+        if(applied.speed) speed = speed * 1.10; 
         
         let fuelCons = parseFloat(String(ac.fuelcons || "0").replace(',', '.')) || 0; 
-        if(applied.fuel) fuelCons = fuelCons * 0.90; // Giảm 10%
+        if(applied.fuel) fuelCons = fuelCons * 0.90; 
         
         let co2Emis = parseFloat(String(ac.co2emis || "0").replace(',', '.')) || 0;
-        if(applied.co2) co2Emis = co2Emis * 0.90; // Giảm 10%
+        if(applied.co2) co2Emis = co2Emis * 0.90; 
         
         let maintHours = parseCur(ac.maintcheck); let acheckCost = parseCur(ac.acheck);
         let pFuel = parseCur(companyData.prices?.fuel); let pCO2 = parseCur(companyData.prices?.co2);
@@ -920,15 +943,13 @@
         let flightTime = Math.ceil(dist / speed);
         let totalPax = actY + actJ + actF;
         
-        // Công thức tính nhiên liệu và CO2
         let totalFuel = fuelCons * dist; 
         let baseY = parseCur(ac.pax) || 1; 
         let totalConfigPax = maxcY + maxcJ + maxcF; 
         let totalCO2 = co2Emis * dist * totalPax * (totalConfigPax / baseY); 
         
-        // Tính chi phí
         let fuelCost = Math.round((totalFuel / 1000) * pFuel); 
-        let co2Cost = Math.round((totalCO2 / 1000) * pCO2); // Cố định hệ số chia 1000 như bạn yêu cầu 
+        let co2Cost = Math.round((totalCO2 / 1000) * pCO2); 
         let rev = (actY * pY) + (actJ * pJ) + (actF * pF);
         let maintCost = Math.round(0.15 * (rev - (fuelCost + co2Cost))); 
         if (maintCost < 0) maintCost = 0; 
@@ -936,13 +957,21 @@
         let acheckFee = acheckDenom > 0 ? Math.round(acheckCost / acheckDenom) : acheckCost;
         let profit = rev - fuelCost - co2Cost - maintCost - acheckFee;
 
-        // TÍNH TOÁN THỜI GIAN ĐẾM NGƯỢC (Khoảng cách / Vận tốc => giờ. Chuyển sang ms và giảm đi một nửa thời gian)
+        // Tích luỹ giờ bay và Quỹ A-Check cho riêng tàu bay
+        ac.hoursSinceACheck = (ac.hoursSinceACheck || 0) + flightTime;
+        ac.acheckFund = (ac.acheckFund || 0) + acheckFee;
+        let fleetTr = document.querySelector(`#fleet-tbody tr[data-id="${ac.id}"]`);
+        if(fleetTr) {
+            let hInput = fleetTr.querySelector('.f-hours-since-acheck'); if(hInput) hInput.value = ac.hoursSinceACheck;
+            let fInput = fleetTr.querySelector('.f-acheck-fund'); if(fInput) fInput.value = ac.acheckFund;
+        }
+
         let cooldownTimeMs = (dist / speed) * 3600000 * 0.5;
         rt.cooldownUntil = Date.now() + cooldownTimeMs;
 
         companyData.history.push({ id: 'HS_'+Date.now(), acId: ac.id, routeId: routeId, date: new Date().toLocaleDateString('vi-VN'), revenue: rev, fuel: fuelCost, co2: co2Cost, maint: maintCost, acheckCost: acheckFee, profit: profit });
         triggerSave();
-        renderTakeoffTable(); // Cập nhật lại UI Cất cánh để hiển thị bộ đếm
+        renderTakeoffTable(); 
 
         let html = `<h2 style="color:#10b981; margin-top:0;">🚀 BÁO CÁO CHUYẾN BAY THÀNH CÔNG</h2>
         <div style="font-size:15px; line-height:1.8;">
@@ -955,6 +984,52 @@
             <hr><h3 style="color:${profit>=0 ? '#10b981' : '#ef4444'}">LỢI NHUẬN THUẦN: ${formatNumber(profit)} $</h3>
         </div><div style="text-align:right;"><button class="btn-main" onclick="closeCommonModal()">Đóng</button></div>`;
         openCommonModal(html);
+    }
+
+    function renderMaintenanceTable() {
+        let mod = document.getElementById('module-maintenance');
+        let html = `<h2 class="module-title">Lịch Bảo Trì (A/C Checks)</h2>
+                    <p style="text-align:center; color:#64748b;">(Hệ thống tự động theo dõi giờ bay và quỹ bảo trì dự phòng)</p>
+                    <div style="overflow-x: auto;"><table style="min-width: 800px;">
+                    <thead><tr><th>STT</th><th>Mã Chặng / Tàu Bay</th><th>Giờ A-Check Còn Lại</th><th>Quỹ A-Check</th><th>Thao Tác</th></tr></thead><tbody>`;
+        companyData.routes.forEach((rt, i) => {
+            if(!rt.route || !rt.aircraft) return;
+            let ac = companyData.fleet.find(f => f.id === rt.aircraft);
+            if(!ac) return;
+            let mk = companyData.makers.find(m => m.id === ac.maker);
+            let maintcheck = parseCur(ac.maintcheck) || 0;
+            let hoursSince = ac.hoursSinceACheck || 0;
+            let remaining = maintcheck - hoursSince;
+            let color = remaining < 50 ? '#ef4444' : '#10b981';
+            
+            html += `<tr>
+                <td style="text-align:center;">${i+1}</td>
+                <td style="text-align:center; font-weight:bold; color:#0284c7;">${rt.segment} <br><span style="font-size:12px; color:#64748b; font-weight:normal;">${mk?.name||''} ${ac?.model||''}</span></td>
+                <td style="text-align:center; font-weight:bold; color:${color};">${remaining} Giờ</td>
+                <td style="text-align:center; font-weight:bold; color:#f59e0b;">${formatNumber(ac.acheckFund || 0)} $</td>
+                <td style="text-align:center;"><button class="btn-main" style="background:#3b82f6;" onclick="performACheck('${ac.id}')">🔧 Thực hiện A-Check</button></td>
+            </tr>`;
+        });
+        html += `</tbody></table></div>`;
+        mod.innerHTML = html;
+    }
+
+    function performACheck(acId) {
+        let ac = companyData.fleet.find(f => f.id === acId);
+        let cost = parseCur(ac.acheck);
+        if(confirm(`Xác nhận thực hiện bảo trì A-Check cho máy bay này?\nChi phí sẽ trừ vào Quỹ: ${formatNumber(cost)} $`)) {
+            ac.acheckFund = (ac.acheckFund || 0) - cost;
+            ac.hoursSinceACheck = 0;
+            
+            let tr = document.querySelector(`#fleet-tbody tr[data-id="${acId}"]`);
+            if(tr) {
+                let hInput = tr.querySelector('.f-hours-since-acheck'); if(hInput) hInput.value = ac.hoursSinceACheck;
+                let fInput = tr.querySelector('.f-acheck-fund'); if(fInput) fInput.value = ac.acheckFund;
+            }
+            triggerSave();
+            renderMaintenanceTable();
+            alert('Đã hoàn tất A-Check!');
+        }
     }
 
     // KHỞI ĐỘNG
