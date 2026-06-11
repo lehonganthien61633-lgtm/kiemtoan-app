@@ -194,8 +194,11 @@
 <div id="module-prices" class="module">
             <h2 class="module-title">Bảng Giá Hệ Thống</h2>
             <p style="text-align: center; color: #64748b; font-style: italic;">Lưu ý: Giá vé (Y, J, F) đã được chuyển vào nút "Chi Tiết" của từng Cấu Hình Tuyến Bay.</p>
-            <div class="form-group"><label>Giá Nhiên liệu ($/1000 Lbs):</label><input type="text" id="price-fuel" value="0" oninput="formatCurrency(this); triggerSave()"></div>
-            <div class="form-group"><label>Giá CO2 Quota ($/1000 kg):</label><input type="text" id="price-co2" value="0" oninput="formatCurrency(this); triggerSave()"></div>
+            <div class="form-group"><label>Giá Nhiên liệu ($/1000 Lbs):</label><input type="text" id="price-fuel" value="0" oninput="formatCurrency(this)"></div>
+            <div class="form-group"><label>Giá CO2 Quota ($/1000 kg):</label><input type="text" id="price-co2" value="0" oninput="formatCurrency(this)"></div>
+            <div style="text-align:center; margin-top:20px;">
+                <button class="btn-main" onclick="triggerSave()">💾 Lưu Bảng Giá</button>
+            </div>
         </div>
 
         <div id="module-airports" class="module">
@@ -343,31 +346,40 @@
     function openCommonModal(html) { document.getElementById('common-modal-content').innerHTML = html; document.getElementById('common-modal').style.display = 'flex'; }
     function closeCommonModal() { document.getElementById('common-modal').style.display = 'none'; }
 
+    let globalAirports = []; let globalCountries = []; let globalDemands = []; let globalFleet = []; let globalMakers = []; 
+    let saveTimer = null; let currentActiveInput = null; let currentActiveRowId = null;
+
     function updateDashboardCount() {
-        let count = document.querySelectorAll('#fleet-tbody tr').length;
-        let firstMaker = (document.querySelector('.f-maker')?.value || '').trim();
-        let firstModel = (document.querySelector('.f-model')?.value || '').trim();
-        if(count === 1 && !firstMaker && !firstModel) count = 0;
+        let count = companyData.routes.filter(r => r.aircraft && r.route).length;
         let countEl = document.getElementById('total-fleet-count');
         if(countEl) countEl.innerText = count;
     }
 
-    // --- FIREBASE SYNC (ĐÃ THÊM BỘ LỌC AN TOÀN TRÁNH CRASH MẢNG RỖNG) ---
     async function loadCompanyData() {
         setSyncStatus("(Đang tải...)", "#f59e0b");
         try {
-            let resGlobal = await fetch(DB_BASE_URL + "globalAirports.json"); 
-            if (resGlobal.ok) { let dataG = await resGlobal.json(); if(dataG && typeof dataG === 'object') globalAirports = (Array.isArray(dataG) ? dataG : Object.values(dataG)).filter(Boolean); }
+            let [resA, resC, resD, resF, resM] = await Promise.all([
+                fetch(DB_BASE_URL + "globalAirports.json"), fetch(DB_BASE_URL + "globalCountries.json"), fetch(DB_BASE_URL + "globalDemands.json"),
+                fetch(DB_BASE_URL + "globalFleet.json"), fetch(DB_BASE_URL + "globalMakers.json")
+            ]);
+            
+            if (resA.ok) { let d = await resA.json(); if(d) globalAirports = (Array.isArray(d) ? d : Object.values(d)).filter(Boolean); }
+            if (resC.ok) { let d = await resC.json(); if(d) globalCountries = (Array.isArray(d) ? d : Object.values(d)).filter(Boolean); }
+            if (resD.ok) { let d = await resD.json(); if(d) globalDemands = (Array.isArray(d) ? d : Object.values(d)).filter(Boolean); }
+            if (resF.ok) { let d = await resF.json(); if(d) globalFleet = (Array.isArray(d) ? d : Object.values(d)).filter(Boolean); }
+            if (resM.ok) { let d = await resM.json(); if(d) globalMakers = (Array.isArray(d) ? d : Object.values(d)).filter(Boolean); }
             
             let res = await fetch(getCompanyDataURL()); 
             if (res.ok) { let data = await res.json(); if (data) companyData = Object.assign(companyData, data); }
             
-            companyData.fleet = (Array.isArray(companyData.fleet) ? companyData.fleet : Object.values(companyData.fleet || {})).filter(Boolean);
+            // Backup tự động nếu trên Global chưa có gì
+            if(globalCountries.length === 0 && companyData.countries?.length > 0) globalCountries = companyData.countries;
+            if(globalMakers.length === 0 && companyData.makers?.length > 0) globalMakers = companyData.makers;
+            if(globalFleet.length === 0 && companyData.fleet?.length > 0) globalFleet = companyData.fleet;
+
             companyData.hubs = (Array.isArray(companyData.hubs) ? companyData.hubs : Object.values(companyData.hubs || {})).filter(Boolean);
             companyData.flightRoutes = (Array.isArray(companyData.flightRoutes) ? companyData.flightRoutes : Object.values(companyData.flightRoutes || {})).filter(Boolean);
             companyData.routes = (Array.isArray(companyData.routes) ? companyData.routes : Object.values(companyData.routes || {})).filter(Boolean);
-            companyData.makers = (Array.isArray(companyData.makers) ? companyData.makers : Object.values(companyData.makers || {})).filter(Boolean);
-            companyData.countries = (Array.isArray(companyData.countries) ? companyData.countries : Object.values(companyData.countries || {})).filter(Boolean);
             companyData.demands = (Array.isArray(companyData.demands) ? companyData.demands : Object.values(companyData.demands || {})).filter(Boolean);
             companyData.history = (Array.isArray(companyData.history) ? companyData.history : Object.values(companyData.history || {})).filter(Boolean);
             if(!companyData.prices) companyData.prices = {fuel:"0",co2:"0"};
@@ -379,6 +391,88 @@
             updateDashboardCount();
             setSyncStatus("(Đã đồng bộ)", "#10b981");
         } catch(e) { console.error("LỖI ĐỒNG BỘ:", e); setSyncStatus("(Lỗi tải dữ liệu)", "#ef4444"); }
+    }
+
+    async function saveCompanyData() {
+        if(!activePhone) return; setSyncStatus("(Đang lưu...)", "#f59e0b");
+        companyData.balance = document.getElementById('db-balance').value; companyData.stock = document.getElementById('db-stock').value;
+        companyData.fuel = document.getElementById('db-fuel').value; companyData.co2 = document.getElementById('db-co2').value;
+        companyData.prices = { fuel: document.getElementById('price-fuel')?.value||"0", co2: document.getElementById('price-co2')?.value||"0" };
+
+        let newFleet = [];
+        document.querySelectorAll('#fleet-tbody tr').forEach(tr => {
+            let maker = tr.querySelector('.f-maker').value; let model = tr.querySelector('.f-model').value.trim();
+            if (maker || model) { 
+                newFleet.push({ 
+                    id: tr.dataset.id, maker: maker, model: model, range: tr.querySelector('.f-range').value.trim(), 
+                    maxspeed: tr.querySelector('.f-maxspeed').value.trim(), pax: tr.querySelector('.f-pax').value.trim(), 
+                    crew_str: tr.querySelector('.f-crew').value, crew_data: JSON.parse(tr.querySelector('.f-crew-data').value || '{}'), 
+                    acheck: tr.querySelector('.f-acheck').value.trim(), maintcheck: tr.querySelector('.f-maintcheck').value.trim(), 
+                    fuelcons: tr.querySelector('.f-fuelcons').value.trim(), co2emis: tr.querySelector('.f-co2emis').value.trim(), 
+                    price: tr.querySelector('.f-price').value.trim(), upg_prices: JSON.parse(tr.querySelector('.f-upg-prices')?.value || '{}')
+                }); 
+            }
+        }); globalFleet = newFleet;
+
+        let newAirports = [];
+        document.querySelectorAll('#airports-tbody tr').forEach(tr => {
+            let name = tr.querySelector('.a-name').value.trim(); let icao = tr.querySelector('.a-icao').value.trim();
+            if (name || icao) { newAirports.push({ id: tr.dataset.id || ('AP_'+Date.now()+Math.random()), countryId: tr.querySelector('.a-country').value, name: name, icao: icao, iata: tr.querySelector('.a-iata').value.trim() }); }
+        });
+        let airportMap = {}; globalAirports.forEach(a => airportMap[a.id] = a);
+        newAirports.forEach(a => { let isDup = Object.values(airportMap).find(g => g.id !== a.id && ((g.icao && g.icao === a.icao) || (g.iata && g.iata === a.iata))); if(!isDup) airportMap[a.id] = a; }); globalAirports = Object.values(airportMap);
+
+        let newHubs = [];
+        document.querySelectorAll('#hubs-tbody tr').forEach(tr => {
+            let apId = tr.querySelector('.h-airport').value; if (apId) { newHubs.push({ id: tr.dataset.id, airportId: apId, base: tr.querySelector('.h-base').checked }); }
+        }); companyData.hubs = newHubs;
+
+        let newFRoutes = [];
+        document.querySelectorAll('#flight-routes-tbody tr').forEach(tr => {
+            let hubId = tr.querySelector('.fr-hub').value; let destId = tr.querySelector('.fr-dest').value;
+            let existFR = companyData.flightRoutes.find(r => r.id === tr.dataset.id);
+            if (hubId && destId) { newFRoutes.push({ id: tr.dataset.id, hub: hubId, dest: destId, prices: existFR?.prices || {y:"0",j:"0",f:"0"} }); }
+        }); companyData.flightRoutes = newFRoutes;
+
+        let newDemands = [];
+        document.querySelectorAll('#demands-tbody tr').forEach(tr => {
+            let frId = tr.dataset.frid; let dist = tr.querySelector('.d-dist').value; let y = tr.querySelector('.d-y').value; let j = tr.querySelector('.d-j').value; let f = tr.querySelector('.d-f').value;
+            newDemands.push({ frId: frId, distance: dist, y: y, j: j, f: f });
+            // Đồng bộ lên Global Demands
+            let fr = companyData.flightRoutes.find(r => r.id === frId);
+            if(fr) {
+                let hub = companyData.hubs.find(h => h.id === fr.hub); let hAp = globalAirports.find(a => a.id === hub?.airportId); let dAp = globalAirports.find(a => a.id === fr.dest);
+                if(hAp && dAp && hAp.icao && dAp.icao) {
+                    let key = hAp.icao + "-" + dAp.icao;
+                    let existingG = globalDemands.find(g => g.key === key);
+                    if(existingG) { existingG.distance = dist; existingG.y = y; existingG.j = j; existingG.f = f; } else { globalDemands.push({ key: key, distance: dist, y: y, j: j, f: f }); }
+                }
+            }
+        }); companyData.demands = newDemands;
+
+        let newRoutes = [];
+        document.querySelectorAll('#routes-tbody tr').forEach(tr => {
+            let route = tr.querySelector('.r-route').value.trim(); let segment = tr.querySelector('.r-segment').value.trim();
+            let flightRouteId = tr.querySelector('.r-froute-id').value; let existRoute = companyData.routes.find(r => r.id === tr.dataset.id);
+            if (route || segment) { 
+                newRoutes.push({ 
+                    id: tr.dataset.id, fRouteId: flightRouteId, route: route, segment: segment, aircraft: tr.querySelector('.r-aircraft').value, 
+                    config: existRoute?.config, cooldownUntil: existRoute?.cooldownUntil || 0,
+                    applied_upgrades: existRoute?.applied_upgrades || { co2: false, speed: false, fuel: false },
+                    flightCountOffset: existRoute?.flightCountOffset || 0, hoursSinceACheck: existRoute?.hoursSinceACheck || 0, acheckFund: existRoute?.acheckFund || 0
+                }); 
+            }
+        }); companyData.routes = newRoutes;
+
+        try {
+            await fetch(getCompanyDataURL(), { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(companyData) });
+            await fetch(DB_BASE_URL + "globalAirports.json", { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(globalAirports) });
+            await fetch(DB_BASE_URL + "globalCountries.json", { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(globalCountries) });
+            await fetch(DB_BASE_URL + "globalDemands.json", { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(globalDemands) });
+            await fetch(DB_BASE_URL + "globalFleet.json", { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(globalFleet) });
+            await fetch(DB_BASE_URL + "globalMakers.json", { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(globalMakers) });
+            setSyncStatus("(Đã lưu)", "#10b981"); updateDashboardCount();
+        } catch(e) { console.error(e); setSyncStatus("(Lỗi kết nối)", "#ef4444"); }
     }
 
     async function saveCompanyData() {
@@ -454,7 +548,7 @@
     }
     // --- QUẢN LÝ QUỐC GIA ---
     function openCountryManager() {
-        let html = `<h3>🌍 Danh Sách Quốc Gia</h3><div style="display:flex; gap:5px; margin-bottom:15px;">
+        let html = `<h3>🌍 Danh Sách Quốc Gia (Global)</h3><div style="display:flex; gap:5px; margin-bottom:15px;">
             <input type="text" id="new-c-en" placeholder="Tên TA (Bắt buộc)" style="flex:2; padding:8px;">
             <input type="text" id="new-c-vi" placeholder="Tên QG" style="flex:2; padding:8px;">
             <input type="text" id="new-c-code" placeholder="Mã QG (2 Ký tự)" maxlength="2" style="flex:1; padding:8px; text-transform:uppercase;">
@@ -464,12 +558,12 @@
     }
     function renderCountriesList() {
         let tb = document.getElementById('countries-tbody'); tb.innerHTML = '';
-        companyData.countries.forEach((c, i) => { tb.innerHTML += `<tr><td style="text-align:center">${i+1}</td><td>${c.en}</td><td>${c.vi}</td><td style="text-align:center">${c.code}</td><td style="text-align:center"><button class="btn-remove" onclick="if(confirm('Xóa?')){ companyData.countries=companyData.countries.filter(x=>x.id!=='${c.id}'); renderCountriesList(); }">X</button></td></tr>`; });
+        globalCountries.forEach((c, i) => { tb.innerHTML += `<tr><td style="text-align:center">${i+1}</td><td>${c.en}</td><td>${c.vi}</td><td style="text-align:center">${c.code}</td><td style="text-align:center"><button class="btn-remove" onclick="if(confirm('Xóa?')){ globalCountries=globalCountries.filter(x=>x.id!=='${c.id}'); renderCountriesList(); }">X</button></td></tr>`; });
     }
     function addCountry() {
         let en = document.getElementById('new-c-en').value.trim(); let vi = document.getElementById('new-c-vi').value.trim(); let code = document.getElementById('new-c-code').value.trim().toUpperCase();
         if(!en) return alert("Tên tiếng Anh là bắt buộc!");
-        companyData.countries.push({id: 'CO_'+Date.now(), en, vi, code}); renderCountriesList();
+        globalCountries.push({id: 'CO_'+Date.now(), en, vi, code}); renderCountriesList();
     }
 
     // --- SÂN BAY GLOBAL ---
@@ -523,42 +617,51 @@
     }
 
     // --- CẤU HÌNH TUYẾN BAY & BẢNG GIÁ VÉ ---
-    function renderFlightRoutesTable() {
-        let tbody = document.getElementById('flight-routes-tbody'); tbody.innerHTML = '';
-        if(companyData.flightRoutes.length === 0) { addFlightRouteRow(); } else { companyData.flightRoutes.forEach(fr => addFlightRouteRow(fr)); }
+    function renderAirportsTable() {
+        let tbody = document.getElementById('airports-tbody'); tbody.innerHTML = '';
+        if(globalAirports.length === 0) { addAirportRow(); } else { globalAirports.forEach(ap => addAirportRow(ap)); }
     }
-    function addFlightRouteRow(fr) {
-        if (!fr || fr instanceof Event) fr = {};
-        let tbody = document.getElementById('flight-routes-tbody'); let tr = document.createElement('tr');
-        tr.dataset.id = fr.id || ('FR_'+Date.now());
-        let hubOpts = companyData.hubs.map(h => { let ap = globalAirports.find(a=>a.id===h.airportId); return `<option value="${h.id}" ${fr.hub===h.id?'selected':''}>${ap?.name||'HUB'} (${ap?.icao||'---'})</option>`; }).join('');
-        
-        // Tự động loại bỏ sân bay HUB khỏi danh sách Sân bay đến khi khởi tạo
-        let hubAirportId = fr.hub ? companyData.hubs.find(h => h.id === fr.hub)?.airportId : null;
-        let destOpts = globalAirports.filter(a => a.id !== hubAirportId).map(a => `<option value="${a.id}" ${fr.dest===a.id?'selected':''}>${a.name} (${a.icao||'---'})</option>`).join('');
-
+    function addAirportRow(ap) {
+        if (!ap || ap instanceof Event) ap = {};
+        let tbody = document.getElementById('airports-tbody'); let tr = document.createElement('tr');
+        tr.dataset.id = ap.id || ('AP_'+Date.now()+Math.random());
+        let countryOpts = globalCountries.map(c => `<option value="${c.id}" ${ap.countryId===c.id?'selected':''}>${c.vi||c.en} (${c.code})</option>`).join('');
         tr.innerHTML = `
-            <td class="fr-stt" style="text-align: center; font-weight: bold;"></td>
-            <td><select class="fr-hub" onchange="updateDestDropdown(this); triggerSave()" style="width: 100%; padding:6px;"><option value="">-- Chọn HUB --</option>${hubOpts}</select></td>
-            <td><select class="fr-dest" onchange="triggerSave()" style="width: 100%; padding:6px;"><option value="">-- Chọn Sân Bay Đến --</option>${destOpts}</select></td>
-            <td><button class="btn-main" style="background:#3b82f6; padding:6px;" onclick="showFlightRouteInfo('${tr.dataset.id}')">Chi Tiết / Giá</button> <button class="btn-remove" onclick="if(confirm('Xóa?')){ this.closest('tr').remove(); triggerSave(); }">Xóa</button></td>
+            <td class="a-stt" style="text-align: center; font-weight: bold;"></td>
+            <td><select class="a-country" onchange="triggerSave()" style="width:100%; padding:6px;"><option value="">-- Chọn QG --</option>${countryOpts}</select></td>
+            <td><input type="text" class="a-name" value="${ap.name || ''}" placeholder="Tên Sân Bay" style="width: 100%; box-sizing: border-box;" oninput="triggerSave()"></td>
+            <td><input type="text" class="a-icao" value="${ap.icao || ''}" placeholder="ICAO" maxlength="4" style="width: 100%; box-sizing: border-box; text-align: center;" oninput="this.value = this.value.toUpperCase(); triggerSave()"></td>
+            <td><input type="text" class="a-iata" value="${ap.iata || ''}" placeholder="IATA" maxlength="3" style="width: 100%; box-sizing: border-box; text-align: center;" oninput="this.value = this.value.toUpperCase(); triggerSave()"></td>
+            <td><button class="btn-remove" onclick="if(confirm('Xóa?')){ this.closest('tr').remove(); triggerSave(); }">Xóa</button></td>
         `;
-        tbody.appendChild(tr); document.querySelectorAll('#flight-routes-tbody tr').forEach((r, i) => r.querySelector('.fr-stt').innerText = i + 1);
+        tbody.appendChild(tr); document.querySelectorAll('#airports-tbody tr').forEach((r, i) => r.querySelector('.a-stt').innerText = i + 1);
     }
 
     // Hàm mới để xử lý sự kiện onchange của dropdown HUB
     function updateDestDropdown(hubSelect) {
-        let tr = hubSelect.closest('tr');
-        let destSelect = tr.querySelector('.fr-dest');
-        let currentDest = destSelect.value;
-        let hubId = hubSelect.value;
-        
-        let hubObj = companyData.hubs.find(h => h.id === hubId);
-        let hubAirportId = hubObj ? hubObj.airportId : null;
-
-        // Cập nhật lại danh sách đích, bỏ qua sân bay đang làm HUB
+        let tr = hubSelect.closest('tr'); let destSelect = tr.querySelector('.fr-dest');
+        let currentDest = destSelect.value; let hubId = hubSelect.value;
+        let hubObj = companyData.hubs.find(h => h.id === hubId); let hubAirportId = hubObj ? hubObj.airportId : null;
         destSelect.innerHTML = '<option value="">-- Chọn Sân Bay Đến --</option>' + 
             globalAirports.filter(a => a.id !== hubAirportId).map(a => `<option value="${a.id}" ${currentDest === a.id ? 'selected' : ''}>${a.name} (${a.icao||'---'})</option>`).join('');
+        destSelect.setAttribute('onchange', `handleDestChange(this, '${tr.dataset.id}')`);
+    }
+    
+    function handleDestChange(destSelect, frId) {
+        let tr = destSelect.closest('tr'); let hubSelect = tr.querySelector('.fr-hub');
+        let hubObj = companyData.hubs.find(h => h.id === hubSelect.value);
+        if(hubObj && destSelect.value) {
+            let hAp = globalAirports.find(a => a.id === hubObj.airportId); let dAp = globalAirports.find(a => a.id === destSelect.value);
+            if(hAp && dAp && hAp.icao && dAp.icao) {
+                let key = hAp.icao + "-" + dAp.icao; let gDemand = globalDemands.find(g => g.key === key);
+                if(gDemand) {
+                    let existing = companyData.demands.find(d => d.frId === frId);
+                    if(existing) { existing.distance = gDemand.distance; existing.y = gDemand.y; existing.j = gDemand.j; existing.f = gDemand.f; } 
+                    else { companyData.demands.push({ frId: frId, distance: gDemand.distance, y: gDemand.y, j: gDemand.j, f: gDemand.f }); }
+                }
+            }
+        }
+        triggerSave();
     }
     
     function showFlightRouteInfo(frId) {
@@ -607,12 +710,12 @@
     }
 
     // --- CẤU HÌNH MÁY BAY (FLEET) ---
-    function openMakersManager() {
-        let html = `<h3>🏢 Hãng Máy Bay</h3><div style="display:flex; gap:10px; margin-bottom:15px;"><input type="text" id="new-maker-name" style="flex:1; padding:8px;"><button class="btn-add" onclick="addMaker()">Thêm</button></div><table style="width:100%;"><tbody id="makers-tbody"></tbody></table><div style="text-align:right;"><button class="btn-main" onclick="closeCommonModal(); renderFleetTable();">Đóng</button></div>`;
+    unction openMakersManager() {
+        let html = `<h3>🏢 Hãng Máy Bay (Global)</h3><div style="display:flex; gap:10px; margin-bottom:15px;"><input type="text" id="new-maker-name" style="flex:1; padding:8px;"><button class="btn-add" onclick="addMaker()">Thêm</button></div><table style="width:100%;"><tbody id="makers-tbody"></tbody></table><div style="text-align:right;"><button class="btn-main" onclick="closeCommonModal(); renderFleetTable();">Đóng</button></div>`;
         openCommonModal(html); renderMakersList();
     }
-    function renderMakersList() { let tb = document.getElementById('makers-tbody'); tb.innerHTML = companyData.makers.map((m,i)=>`<tr><td>${i+1}</td><td>${m.name}</td><td><button class="btn-remove" onclick="if(confirm('Xóa?')) { companyData.makers=companyData.makers.filter(x=>x.id!=='${m.id}'); renderMakersList(); triggerSave(); }">X</button></td></tr>`).join(''); }
-    function addMaker() { let n = document.getElementById('new-maker-name').value; if(n){ companyData.makers.push({id:'MK_'+Date.now(), name:n}); renderMakersList(); triggerSave(); } }
+    function renderMakersList() { let tb = document.getElementById('makers-tbody'); tb.innerHTML = globalMakers.map((m,i)=>`<tr><td>${i+1}</td><td>${m.name}</td><td><button class="btn-remove" onclick="if(confirm('Xóa?')) { globalMakers=globalMakers.filter(x=>x.id!=='${m.id}'); renderMakersList(); triggerSave(); }">X</button></td></tr>`).join(''); }
+    function addMaker() { let n = document.getElementById('new-maker-name').value; if(n){ globalMakers.push({id:'MK_'+Date.now(), name:n}); renderMakersList(); triggerSave(); } }
 
     function openCrewManager(inputEle) {
         currentActiveInput = inputEle; let data = JSON.parse(inputEle.nextElementSibling.value || '{"p":0,"c":0,"e":0,"t":0}');
@@ -623,10 +726,9 @@
 
     function renderFleetTable() {
         let thThem = document.querySelector('#module-fleet thead tr th:last-child');
-        if(thThem) thThem.innerText = "Thông tin thêm"; // Thay đổi header tự động
-
+        if(thThem) thThem.innerText = "Thông tin thêm"; 
         let tbody = document.getElementById('fleet-tbody'); tbody.innerHTML = '';
-        if(companyData.fleet.length === 0) { addFleetRow(); } else { companyData.fleet.forEach(ac => addFleetRow(ac)); }
+        if(globalFleet.length === 0) { addFleetRow(); } else { globalFleet.forEach(ac => addFleetRow(ac)); }
         updateDashboardCount();
     }
     
@@ -634,7 +736,7 @@
         if (!ac || ac instanceof Event) ac = {};
         let tbody = document.getElementById('fleet-tbody'); let tr = document.createElement('tr');
         tr.dataset.id = ac.id || ('AC_'+Date.now());
-        let makerOpts = companyData.makers.map(m => `<option value="${m.id}" ${ac.maker===m.id?'selected':''}>${m.name}</option>`).join('');
+        let makerOpts = globalMakers.map(m => `<option value="${m.id}" ${ac.maker===m.id?'selected':''}>${m.name}</option>`).join('');
         tr.innerHTML = `
             <td class="f-stt" style="text-align: center; font-weight: bold;"></td>
             <td><select class="f-maker" style="width: 100%; box-sizing: border-box;" onchange="triggerSave()"><option value="">-- Hãng --</option>${makerOpts}</select></td>
@@ -650,7 +752,7 @@
             <td><input type="text" class="f-price" value="${ac.price || ''}" placeholder="$" style="width: 100%; box-sizing: border-box; text-align: center;" oninput="formatCurrency(this); triggerSave()"></td>
             <td>
                 <button class="btn-main" style="background:#8b5cf6; margin-bottom: 5px; font-size: 12px; padding: 4px;" onclick="openUpgradePrices('${tr.dataset.id}')">+ Bảng Giá Cải Tạo</button>
-                <button class="btn-remove" style="font-size: 12px; padding: 4px;" onclick="if(confirm('Xóa tàu bay?')) { this.closest('tr').remove(); triggerSave(); }">Xóa/Bán</button>
+                <button class="btn-remove" style="font-size: 12px; padding: 4px;" onclick="if(confirm('Xóa tàu bay?')) { this.closest('tr').remove(); triggerSave(); }">Xóa</button>
                 <input type="hidden" class="f-upg-prices" value='${JSON.stringify(ac.upg_prices||{})}'>
             </td>
         `;
@@ -688,16 +790,66 @@
         if (!rt || rt instanceof Event) rt = {};
         let tbody = document.getElementById('routes-tbody'); let tr = document.createElement('tr');
         tr.dataset.id = rt.id || ('RT_'+Date.now());
-        let acOpts = companyData.fleet.map(f => { let mName = companyData.makers.find(m => m.id === f.maker)?.name || 'Hãng'; return `<option value="${f.id}" ${rt.aircraft === f.id ? 'selected' : ''}>${mName} ${f.model}</option>`; }).join('');
+        let acOpts = globalFleet.map(f => { let mName = globalMakers.find(m => m.id === f.maker)?.name || 'Hãng'; return `<option value="${f.id}" ${rt.aircraft === f.id ? 'selected' : ''}>${mName} ${f.model}</option>`; }).join('');
         tr.innerHTML = `
             <td class="r-stt" style="text-align: center; font-weight: bold;"></td>
             <td style="text-align:center;"><button class="btn-main" style="padding: 6px 10px; font-size:12px; background:#10b981;" onclick="openRouteSelector(this)">Chọn Chặng</button><input type="hidden" class="r-froute-id" value="${rt.fRouteId || ''}"></td>
             <td><input type="text" class="r-route" value="${rt.route || ''}" readonly placeholder="Tự điền..." style="width: 100%; box-sizing: border-box; text-align: center; background: #f1f5f9; font-weight: bold; color: #0284c7;"></td>
             <td><input type="text" class="r-segment" value="${rt.segment || ''}" readonly placeholder="Tự điền..." style="width: 100%; box-sizing: border-box; text-align: center; background: #f1f5f9; font-weight: bold; color: #10b981;"></td>
             <td><div style="display:flex; gap:8px;"><select class="r-aircraft" onchange="triggerSave()" style="flex:1; padding:6px;"><option value="">-- Chọn Máy Bay --</option>${acOpts}</select><button class="btn-main" style="padding: 6px 12px; background: #3b82f6;" onclick="showAircraftInfo(this.previousElementSibling.value, '${tr.dataset.id}')">🔍 Cấu hình</button></div></td>
-            <td><button class="btn-remove" onclick="if(confirm('Xóa chặng?')) { this.closest('tr').remove(); triggerSave(); }">Xóa</button></td>
+            <td>
+                <button class="btn-remove" style="background:#8b5cf6; padding: 6px; font-size: 12px; margin-bottom:4px; width:100%;" onclick="openReplaceAircraft('${tr.dataset.id}')">🔄 Thay Tàu Bay</button>
+                <button class="btn-remove" style="padding: 6px; font-size: 12px; width:100%;" onclick="if(confirm('Xóa chặng?')) { this.closest('tr').remove(); triggerSave(); }">Xóa Chặng</button>
+            </td>
         `;
         tbody.appendChild(tr); document.querySelectorAll('#routes-tbody tr').forEach((r, i) => r.querySelector('.r-stt').innerText = i + 1);
+    }
+    function openReplaceAircraft(routeId) {
+        let rt = companyData.routes.find(r => r.id === routeId);
+        let currAc = globalFleet.find(f => f.id === rt.aircraft);
+        
+        let acOpts = globalFleet.map(f => { 
+            let mName = globalMakers.find(m => m.id === f.maker)?.name || 'Hãng'; 
+            return `<option value="${f.id}" ${rt.aircraft === f.id ? 'selected' : ''}>${mName} ${f.model} (Y:${f.pax} - ${f.maxspeed}km/h - Giá: ${formatNumber(parseCur(f.price))}$)</option>`; 
+        }).join('');
+
+        let html = `<h3>🔄 Thay Đổi Tàu Bay Chặng ${rt.segment || ''}</h3>
+            <p>Tàu bay hiện tại: <b>${currAc ? (globalMakers.find(m=>m.id===currAc.maker)?.name + ' ' + currAc.model) : 'Chưa có'}</b></p>
+            <div class="form-group" style="display:block;">
+                <label>Chọn Tàu Bay Thay Thế:</label>
+                <select id="replace-ac-select" style="width:100%; margin-top:10px; padding:10px;">
+                    <option value="">-- Chọn Tàu Bay Mới --</option>
+                    ${acOpts}
+                </select>
+            </div>
+            <div style="margin-top:15px; padding:10px; background:#f1f5f9; border-radius:4px;">
+                <p style="margin:5px 0; color:#ef4444; font-size:14px;">Lưu ý: Thay đổi tàu bay sẽ yêu cầu nhập giá mua và tự động reset các cấu hình ghế/nâng cấp hiện có của chặng này.</p>
+                <div class="form-group" style="display:block;">
+                    <label>Xác nhận Giá Mua ($):</label>
+                    <input type="text" id="replace-ac-price" placeholder="Nhập giá mua..." oninput="formatCurrency(this)" style="width:100%; margin-top:5px;">
+                </div>
+            </div>
+            <div style="text-align:right; margin-top:15px;">
+                <button class="btn-main" style="background:#10b981;" onclick="confirmReplaceAircraft('${routeId}')">Xác Nhận Thay Thế</button>
+                <button class="btn-remove" onclick="closeCommonModal()">Hủy</button>
+            </div>
+        `;
+        openCommonModal(html);
+    }
+    function confirmReplaceAircraft(routeId) {
+        let newAcId = document.getElementById('replace-ac-select').value;
+        let confirmPrice = parseCur(document.getElementById('replace-ac-price').value);
+        if(!newAcId) return alert("Vui lòng chọn tàu bay mới!");
+        
+        let rt = companyData.routes.find(r => r.id === routeId);
+        let newAc = globalFleet.find(f => f.id === newAcId);
+        
+        rt.aircraft = newAcId;
+        rt.config = { y: parseCur(newAc.pax), j: 0, f: 0, cost: confirmPrice, costType: 'replace' };
+        rt.applied_upgrades = { co2: false, speed: false, fuel: false };
+        
+        triggerSave(); closeCommonModal(); renderRoutesTable();
+        alert("Đã thay đổi tàu bay thành công!");
     }
     function openRouteSelector(btnEle) {
         currentActiveRowId = btnEle.closest('tr').dataset.id;
