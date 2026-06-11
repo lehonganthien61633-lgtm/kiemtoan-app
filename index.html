@@ -785,7 +785,7 @@
                 <div><b>Tầm bay:</b> ${ac.range||0} km</div>
                 <div><b>Vận tốc hiện hành:</b> <span style="color:#3b82f6; font-weight:bold;">${formatNumber(speed)} km/h</span></div>
                 <div><b>Giá trị hiện tại:</b> <span style="color:${currentValue >= 0 ? '#10b981' : '#ef4444'}; font-weight:bold; font-size:16px;">${formatNumber(currentValue)} $</span></div>
-                <div><b>Số lần bay:</b> ${actualFlightCount} <button style="background:none; border:none; color:#3b82f6; cursor:pointer; text-decoration:underline; font-size:12px;" onclick="editFlightCount('${routeId}')">(Điều chỉnh)</button></div>
+                <div style="grid-column: span 2;"><b>Số lần bay:</b> ${actualFlightCount} <button style="background:none; border:none; color:#3b82f6; cursor:pointer; text-decoration:underline; font-size:12px;" onclick="editFlightCount('${routeId}')">(Điều chỉnh)</button></div>
             </div>
             
             <h4 style="margin-bottom:5px; margin-top: 15px;">🚀 Trạng Thái Nâng Cấp Tàu Bay Này</h4>
@@ -822,6 +822,7 @@
         rt.config.costType = costTypeNode ? costTypeNode.value : 'add';
         triggerSave(); showAircraftInfo(acId, routeId); 
     }
+
     function toggleUpgrade(routeId, type, state) {
         let rt = companyData.routes.find(r => r.id === routeId);
         if(!rt.applied_upgrades) rt.applied_upgrades = { co2: false, speed: false, fuel: false };
@@ -830,16 +831,6 @@
         showAircraftInfo(rt.aircraft, routeId); 
     }
 
-    function toggleUpgrade(acId, type, state) {
-        let ac = companyData.fleet.find(f => f.id === acId);
-        if(!ac.applied_upgrades) ac.applied_upgrades = { co2: false, speed: false, fuel: false };
-        ac.applied_upgrades[type] = state;
-        let tr = document.querySelector(`#fleet-tbody tr[data-id="${acId}"]`);
-        if(tr) tr.querySelector('.f-applied-upgrades').value = JSON.stringify(ac.applied_upgrades);
-        triggerSave();
-        let openRt = companyData.routes.find(r => r.aircraft === acId);
-        if(openRt) showAircraftInfo(acId, openRt.id); // Tải lại form nâng cấp lập tức
-    }
     function editFlightCount(routeId) {
         let offset = prompt("Nhập số lần bay muốn cộng thêm (hoặc số âm để trừ đi):", "0");
         if(offset !== null && !isNaN(parseInt(offset))) {
